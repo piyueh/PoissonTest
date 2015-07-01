@@ -27,9 +27,6 @@ int main(int argc, char **argv)
 	RCP<FancyOStream> 		out = Teuchos::VerboseObjectBase::getDefaultOStream();
 	outInitSetting(out, myRank, procNum);
 
-	// adjust the properties of the fancy output
-
-
 
 	// setup the domain and descritization information
 	int 		Nx = 100;
