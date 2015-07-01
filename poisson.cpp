@@ -1,56 +1,35 @@
-# include <iostream>
-# include <cmath>
+/**
+ * @file poisson.cpp
+ * @brief main function
+ * @author Pi-Yueh Chuang
+ * @version alpha
+ * @date 2015-07-01
+ */
 
-# include <Teuchos_GlobalMPISession.hpp>
-# include <Teuchos_VerboseObject.hpp>
-# include <Teuchos_RCP.hpp>
-
-# include <Tpetra_DefaultPlatform.hpp>
-# include <Tpetra_Map.hpp>
-# include <Tpetra_Vector.hpp>
-# include <Tpetra_MultiVector.hpp>
-# include <Tpetra_CrsMatrix.hpp>
-
-# include <BelosSolverFactory.hpp>
-# include <BelosTpetraAdapter.hpp>
-
-typedef int 		LO_t;
-typedef int 		GO_t;
-typedef double 		scalar_t;
-typedef Kokkos::Compat::KokkosCudaWrapperNode 					node_t;
-
-typedef Teuchos::Comm<int> 										comm_t;
-typedef Tpetra::Map<LO_t, GO_t, node_t> 						map_t;
-typedef Tpetra::Vector<scalar_t, LO_t, GO_t, node_t> 			vector_t;
-typedef Tpetra::CrsMatrix<scalar_t, LO_t, GO_t, node_t> 		SPMtx;
-typedef Tpetra::MultiVector<scalar_t, LO_t, GO_t, node_t> 		MV_t;
-typedef Tpetra::Operator<scalar_t, LO_t, GO_t, node_t> 			OP_t;
+# include "TriPoisson.hpp"
+# include "typedef.hpp"
+# include "misc.hpp"
 
 int main(int argc, char **argv)
 {
+
 	// Initialize Tpetra (MPI and Kokkos nodes)
 	Tpetra::initialize(&argc, &argv);
 
 	// Get global communicator
-	Teuchos::RCP<const comm_t> 		comm = Tpetra::getDefaultComm();
+	RCP<const COMM_t> 		comm = Tpetra::getDefaultComm();
 
 	// obtain the rank of current process and the size of communicator
-	int 			myRank = comm->getRank();
-	int 			procNum = comm->getSize();
+	int 					myRank = comm->getRank();
+	int 					procNum = comm->getSize();
 
-	// set up fancy output, which can be used by Trilinos objects
-	Teuchos::RCP<Teuchos::FancyOStream> 	out = 
-							Teuchos::VerboseObjectBase::getDefaultOStream();
+	// set up fancy output, which can be used by Trilinos objects under MPI
+	RCP<FancyOStream> 		out = Teuchos::VerboseObjectBase::getDefaultOStream();
+	outInitSetting(out, myRank, procNum);
 
 	// adjust the properties of the fancy output
-	out->setTabIndentStr("  ");
-	out->setShowLinePrefix(false);
-	out->setMaxLenLinePrefix(10);
-	out->setShowTabCount(false);
-	out->setShowProcRank(true);
 
-	out->setProcRankAndSize(myRank, procNum);
-	out->setOutputToRootOnly(0);
+
 
 	// setup the domain and descritization information
 	int 		Nx = 100;
