@@ -1,0 +1,6 @@
+log.txt
+TriPoisson
+CMakeCache.txt
+CMakeFiles/
+Makefile
+*.cmake

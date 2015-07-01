@@ -1,0 +1,11 @@
+#! /bin/bash
+
+rm -rf CMakeFiles cmake_install.cmake CMakeCache.txt MakeFile
+
+cmake \
+	-D TRILINOS_PATH:FILEPATH="/opt/Trilinos" 					\
+	-D CMAKE_BUILD_TYPE:STRING=RELEASE 							\
+	-D BUILD_SHARED_LIBS:BOOL=ON 								\
+	-D CMAKE_VERBOSE_MAKEFILE:BOOL=ON 							\
+	-D CMAKE_CXX_FLAGS:STRING="-std=c++11" 			\
+	.
