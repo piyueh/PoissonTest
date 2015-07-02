@@ -40,9 +40,21 @@ typedef Tpetra::MultiVector<SC_t, LO_t, GO_t, ND_t> 	MV_t;
 // type definition of distributed operators
 typedef Tpetra::Operator<SC_t, LO_t, GO_t, ND_t> 		OP_t;
 
+// solver factory of Belos
+typedef Belos::SolverFactory<SC_t, MV_t, OP_t> 			SolverFactory;
+
+// solver manager of Belos
+typedef Belos::SolverManager<SC_t, MV_t, OP_t> 			SolverManager;
+
+// type definition of linear system from Belos
+typedef Belos::LinearProblem<SC_t, MV_t, OP_t> 			LinearProblem;
+
+
+
 // in order to not use namespace
 using Teuchos::RCP;
 using Teuchos::rcp;
 using Teuchos::rcpFromRef;
 using Teuchos::ArrayRCP;
 using Teuchos::FancyOStream;
+using Teuchos::ParameterList;
