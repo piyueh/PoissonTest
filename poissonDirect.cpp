@@ -13,8 +13,7 @@
 # include <Tpetra_MultiVector.hpp>
 # include <Tpetra_CrsMatrix.hpp>
 
-# include <BelosSolverFactory.hpp>
-# include <BelosTpetraAdapter.hpp>
+# include <Amesos2.hpp>
 
 # include <Ifpack2_Factory.hpp>
 # include <Ifpack2_Preconditioner.hpp>
@@ -35,8 +34,8 @@ using Teuchos::TimeMonitor;
 typedef int 		LO_t;
 typedef int 		GO_t;
 typedef double 		SC_t;
-typedef Kokkos::Compat::KokkosCudaWrapperNode 			ND_t;
-//typedef Kokkos::Compat::KokkosSerialWrapperNode 			ND_t;
+//typedef Kokkos::Compat::KokkosCudaWrapperNode 			ND_t;
+typedef Kokkos::Compat::KokkosSerialWrapperNode 			ND_t;
 typedef Teuchos::Comm<int> 								COMM_t;
 typedef Tpetra::Map<LO_t, GO_t, ND_t> 					MAP_t;
 typedef Tpetra::Vector<SC_t, LO_t, GO_t, ND_t> 			VEC_t;
@@ -46,10 +45,7 @@ typedef Tpetra::Operator<SC_t, LO_t, GO_t, ND_t> 		OP_t;
 typedef RCP<const COMM_t> 								COMM_ptr_t;
 typedef RCP<const MAP_t> 								MAP_ptr_t;
 typedef RCP<FancyOStream> 								OUT_ptr_t;
-typedef Belos::SolverFactory<SC_t, MV_t, OP_t> 			SolverFactory;
-typedef Belos::SolverManager<SC_t, MV_t, OP_t> 			SolverManager;
-typedef Belos::LinearProblem<SC_t, MV_t, OP_t> 			LinearProblem;
-typedef Ifpack2::Preconditioner<SC_t, LO_t, GO_t, ND_t> PREC_t;
+typedef Amesos2::Solver<SPM_t, VEC_t> 					SOLVER_t;
 
 
 void generateXY(MAP_ptr_t &, RCP<VEC_t> &, RCP<VEC_t> &, GO_t, SC_t);
@@ -119,9 +115,7 @@ int main(int argc, char **argv)
 	RCP<VEC_t> 		f;
 	RCP<VEC_t> 		err;
 	RCP<SPM_t> 		A;
-	RCP<PREC_t> 	M;
 	RCP<ParameterList> 	solverParams;
-	RCP<ParameterList> 	precParams;
 
 	// set x and y coordinates
 	x = rcp(new VEC_t(map));
@@ -130,6 +124,8 @@ int main(int argc, char **argv)
 	y->setObjectLabel("y coordinates");
 	generateXY(map, x, y, Nx, dx);
 	comm->barrier();
+	x->print(std::cout);
+	y->print(std::cout);
 
 
 	// set unknowns p and its exact solution
@@ -139,6 +135,8 @@ int main(int argc, char **argv)
 	p_exat->setObjectLabel("exact solution");
 	generateExactSoln(map, p_exat, x, y, n);
 	comm->barrier();
+	p->print(std::cout);
+	p_exat->print(std::cout);
 
 
 
@@ -147,10 +145,12 @@ int main(int argc, char **argv)
 	f->setObjectLabel("RHS");
 	generateRHS(map, f, x, y, n, dx);
 	comm->barrier();
+	f->print(std::cout);
 
 
 	err = rcp(new VEC_t(map));
 	err->setObjectLabel("absolute error");
+	err->print(std::cout);
 
 
 	A = rcp(new SPM_t(map, 5, Tpetra::StaticProfile));
@@ -158,99 +158,25 @@ int main(int argc, char **argv)
 	generateA(map, A, Nx);
 	comm->barrier();
 	A->fillComplete();
+	A->print(std::cout);
 
-	const std::string test = "DIAGONAL";
 
 	RCP<const SPM_t> 	constA = rcpFromRef(*A);
+	RCP<const VEC_t> 	constf = rcpFromRef(*f);
 
-	M = Ifpack2::Factory::create(test, constA);
-	precParams = Teuchos::parameterList();
-	M->setObjectLabel("preconditioner");
-	//precParams->set("fact: ilut level-of-fill", 2.0);
-	//precParams->set("fact: drop tolerance", 0.0);
-	//precParams->set("fact: absolute threshold", 0.1);
-	M->setParameters(*precParams);
-	M->initialize();
-	M->compute();
+	RCP<SOLVER_t> 		solver = Amesos2::create("Basker", constA, p, constf);
+	solver->Teuchos::Describable::describe(std::cout);
 
-	/*
-	RCP<Time> 	solveTime = TimeMonitor::getNewCounter("Wall-time of solve()");
-	solveTime->enable();
-	solveTime->reset();
-	for(int i=0; i<100; ++i)
-	{
-		solveTime->start();
-		M->apply(*f, *p);
-		solveTime->stop();
-	}
-	*/
+	auto pp = solver->getValidParameters();
+	pp->print();
 
-	// create linear system and solver
-	solverParams = Teuchos::parameterList();
-	solverParams->set("Convergence Tolerance", 1e-6);
-	solverParams->set("Maximum Iterations", 1000000);
-	solverParams->set("Assert Positive Definiteness", false);
-	//solverParams->set("Num Blocks", 1);
-	//solverParams->set("Maximum Restarts", 10);
+	solver->solve();
 
-
-	// create solver factory
-	SolverFactory 	factory;
-
-
-	// to show all available solvers
-	auto 	availSolvers = factory.supportedSolverNames();
-	for(auto it=availSolvers.begin(); it!=availSolvers.end(); ++it)
-		std::cout << *it << std::endl;
-
-
-	// create solver
-	RCP<SolverManager> 	solver = factory.create("GMRES", solverParams);
-
-
-	// get available parameters of currently selected solver
-	RCP<const ParameterList> 	availParams = solver->getCurrentParameters();
-	availParams->print();
-
-
-	// create problem set
-	RCP<LinearProblem> 	problem = rcp(new LinearProblem (A, p, f));
-
-
-	// set preconditioner
-	problem->setRightPrec(M);
-
-
-	// unknown command
-	problem->setProblem();
-
-
-	// link the solver and the problem set
-	solver->setProblem(problem);
-
-	solver->describe(std::cout);
-
-
-	// create and start the timer
-	RCP<Time> 	solveTime = TimeMonitor::getNewCounter("Wall-time of solve()");
-	solveTime->enable();
-	solveTime->start(true);
-	// solve the problem
-	Belos::ReturnType 	result = solver->solve();
-	// stop timer
-	solveTime->stop();
-
-	if (result == Belos::Converged)
-		*out << "Success" << std::endl;
-	else
-		*out << "Failed" << std::endl;
 
 	err->update(1.0, *p, -1.0, *p_exat, 0);
 	SC_t 	norm2 = err->norm2();
 
 	*out << "\tL2 Norm of Errors: " << norm2 << std::endl;
-	*out << "\tNumber of Iterations: " 
-		 << solver->getNumIters() << std::endl;
 
 	TimeMonitor::summarize();
 

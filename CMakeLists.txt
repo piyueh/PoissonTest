@@ -49,9 +49,9 @@ project(TriPoisson)
 
 
 # EDIT HERE! Source files
-set(SOURCES
-	poisson.cpp
-	)
+set(SOURCES1 poisson.cpp)
+set(SOURCES2 poissonSOR.cpp)
+set(SOURCES3 poissonDirect.cpp)
 
 # EDIT HERE! Headers, if any
 # set(HRADERS )
@@ -66,10 +66,14 @@ link_directories(${Trilinos_LIBRARY_DIRS})
 link_directories(${Trilinos_TPL_LIBRARY_DIRS})
 
 # EDIT HERE! Executable file and corresponding source files
-add_executable(TriPoisson ${SOURCES})
+add_executable(TriPoisson ${SOURCES1})
+add_executable(TriPoissonSOR ${SOURCES2})
+add_executable(TriPoissonDirect ${SOURCES3})
 
 # EDIT HERE! I'm not sure what this command is doing...
-target_link_libraries(TriPoisson
-	${Trilinos_LIBRARIES}
-	${Trilinos_TPL_LIBRARIES}
-	)
+target_link_libraries(TriPoisson ${Trilinos_LIBRARIES} 
+									${Trilinos_TPL_LIBRARIES})
+target_link_libraries(TriPoissonSOR ${Trilinos_LIBRARIES} 
+									${Trilinos_TPL_LIBRARIES})
+target_link_libraries(TriPoissonDirect ${Trilinos_LIBRARIES} 
+									${Trilinos_TPL_LIBRARIES})

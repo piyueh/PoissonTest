@@ -4,7 +4,6 @@
 # include <Teuchos_GlobalMPISession.hpp>
 # include <Teuchos_CommandLineProcessor.hpp>
 # include <Teuchos_VerboseObject.hpp>
-# include <Teuchos_TimeMonitor.hpp>
 # include <Teuchos_RCP.hpp>
 
 # include <Tpetra_DefaultPlatform.hpp>
@@ -28,8 +27,6 @@ using Teuchos::tuple;
 using Teuchos::FancyOStream;
 using Teuchos::ParameterList;
 using Teuchos::CommandLineProcessor;
-using Teuchos::Time;
-using Teuchos::TimeMonitor;
 
 
 typedef int 		LO_t;
@@ -130,6 +127,8 @@ int main(int argc, char **argv)
 	y->setObjectLabel("y coordinates");
 	generateXY(map, x, y, Nx, dx);
 	comm->barrier();
+	x->print(std::cout);
+	y->print(std::cout);
 
 
 	// set unknowns p and its exact solution
@@ -139,6 +138,8 @@ int main(int argc, char **argv)
 	p_exat->setObjectLabel("exact solution");
 	generateExactSoln(map, p_exat, x, y, n);
 	comm->barrier();
+	p->print(std::cout);
+	p_exat->print(std::cout);
 
 
 
@@ -147,10 +148,12 @@ int main(int argc, char **argv)
 	f->setObjectLabel("RHS");
 	generateRHS(map, f, x, y, n, dx);
 	comm->barrier();
+	f->print(std::cout);
 
 
 	err = rcp(new VEC_t(map));
 	err->setObjectLabel("absolute error");
+	err->print(std::cout);
 
 
 	A = rcp(new SPM_t(map, 5, Tpetra::StaticProfile));
@@ -158,40 +161,30 @@ int main(int argc, char **argv)
 	generateA(map, A, Nx);
 	comm->barrier();
 	A->fillComplete();
+	A->print(std::cout);
 
-	const std::string test = "DIAGONAL";
+	const std::string test = "RELAXATION";
 
 	RCP<const SPM_t> 	constA = rcpFromRef(*A);
 
 	M = Ifpack2::Factory::create(test, constA);
 	precParams = Teuchos::parameterList();
 	M->setObjectLabel("preconditioner");
-	//precParams->set("fact: ilut level-of-fill", 2.0);
-	//precParams->set("fact: drop tolerance", 0.0);
-	//precParams->set("fact: absolute threshold", 0.1);
+	precParams->set("relaxation: type", "Symmetric Gauss-Seidel");
+	precParams->set("relaxation: sweeps", 2);
+	precParams->set("relaxation: damping factor", 1.9);
 	M->setParameters(*precParams);
 	M->initialize();
 	M->compute();
+	M->describe(std::cout);
 
-	/*
-	RCP<Time> 	solveTime = TimeMonitor::getNewCounter("Wall-time of solve()");
-	solveTime->enable();
-	solveTime->reset();
-	for(int i=0; i<100; ++i)
-	{
-		solveTime->start();
-		M->apply(*f, *p);
-		solveTime->stop();
-	}
-	*/
+
 
 	// create linear system and solver
 	solverParams = Teuchos::parameterList();
 	solverParams->set("Convergence Tolerance", 1e-6);
 	solverParams->set("Maximum Iterations", 1000000);
 	solverParams->set("Assert Positive Definiteness", false);
-	//solverParams->set("Num Blocks", 1);
-	//solverParams->set("Maximum Restarts", 10);
 
 
 	// create solver factory
@@ -205,7 +198,7 @@ int main(int argc, char **argv)
 
 
 	// create solver
-	RCP<SolverManager> 	solver = factory.create("GMRES", solverParams);
+	RCP<SolverManager> 	solver = factory.create("Fixed Point", solverParams);
 
 
 	// get available parameters of currently selected solver
@@ -218,7 +211,7 @@ int main(int argc, char **argv)
 
 
 	// set preconditioner
-	problem->setRightPrec(M);
+	problem->setLeftPrec(M);
 
 
 	// unknown command
@@ -231,14 +224,7 @@ int main(int argc, char **argv)
 	solver->describe(std::cout);
 
 
-	// create and start the timer
-	RCP<Time> 	solveTime = TimeMonitor::getNewCounter("Wall-time of solve()");
-	solveTime->enable();
-	solveTime->start(true);
-	// solve the problem
 	Belos::ReturnType 	result = solver->solve();
-	// stop timer
-	solveTime->stop();
 
 	if (result == Belos::Converged)
 		*out << "Success" << std::endl;
@@ -251,8 +237,6 @@ int main(int argc, char **argv)
 	*out << "\tL2 Norm of Errors: " << norm2 << std::endl;
 	*out << "\tNumber of Iterations: " 
 		 << solver->getNumIters() << std::endl;
-
-	TimeMonitor::summarize();
 
 	Tpetra::finalize();
 	return 0;
