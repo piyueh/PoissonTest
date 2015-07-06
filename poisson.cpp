@@ -31,25 +31,23 @@ using Teuchos::CommandLineProcessor;
 using Teuchos::Time;
 using Teuchos::TimeMonitor;
 
-
 typedef int 		LO_t;
 typedef int 		GO_t;
 typedef double 		SC_t;
-typedef Kokkos::Compat::KokkosCudaWrapperNode 			ND_t;
-//typedef Kokkos::Compat::KokkosSerialWrapperNode 			ND_t;
-typedef Teuchos::Comm<int> 								COMM_t;
-typedef Tpetra::Map<LO_t, GO_t, ND_t> 					MAP_t;
-typedef Tpetra::Vector<SC_t, LO_t, GO_t, ND_t> 			VEC_t;
-typedef Tpetra::CrsMatrix<SC_t, LO_t, GO_t, ND_t> 		SPM_t;
-typedef Tpetra::MultiVector<SC_t, LO_t, GO_t, ND_t> 	MV_t;
-typedef Tpetra::Operator<SC_t, LO_t, GO_t, ND_t> 		OP_t;
-typedef RCP<const COMM_t> 								COMM_ptr_t;
-typedef RCP<const MAP_t> 								MAP_ptr_t;
-typedef RCP<FancyOStream> 								OUT_ptr_t;
-typedef Belos::SolverFactory<SC_t, MV_t, OP_t> 			SolverFactory;
-typedef Belos::SolverManager<SC_t, MV_t, OP_t> 			SolverManager;
-typedef Belos::LinearProblem<SC_t, MV_t, OP_t> 			LinearProblem;
-typedef Ifpack2::Preconditioner<SC_t, LO_t, GO_t, ND_t> PREC_t;
+typedef NODETYPE	ND_t;
+typedef Teuchos::Comm<int>									COMM_t;
+typedef Tpetra::Map<LO_t, GO_t, ND_t>						MAP_t;
+typedef Tpetra::Vector<SC_t, LO_t, GO_t, ND_t>				VEC_t;
+typedef Tpetra::CrsMatrix<SC_t, LO_t, GO_t, ND_t>			SPM_t;
+typedef Tpetra::MultiVector<SC_t, LO_t, GO_t, ND_t> 		MV_t;
+typedef Tpetra::Operator<SC_t, LO_t, GO_t, ND_t>			OP_t;
+typedef RCP<const COMM_t>									COMM_ptr_t;
+typedef RCP<const MAP_t>									MAP_ptr_t;
+typedef RCP<FancyOStream>									OUT_ptr_t;
+typedef Belos::SolverFactory<SC_t, MV_t, OP_t>				SolverFactory;
+typedef Belos::SolverManager<SC_t, MV_t, OP_t>				SolverManager;
+typedef Belos::LinearProblem<SC_t, MV_t, OP_t>				LinearProblem;
+typedef Ifpack2::Preconditioner<SC_t, LO_t, GO_t, ND_t>		PREC_t;
 
 
 void generateXY(MAP_ptr_t &, RCP<VEC_t> &, RCP<VEC_t> &, GO_t, SC_t);
@@ -113,15 +111,15 @@ int main(int argc, char **argv)
 	*out << std::endl;
 
 	// definition of all variables
-	RCP<VEC_t> 		x, y;
-	RCP<VEC_t> 		p;
-	RCP<VEC_t> 		p_exat;
-	RCP<VEC_t> 		f;
-	RCP<VEC_t> 		err;
-	RCP<SPM_t> 		A;
-	RCP<PREC_t> 	M;
-	RCP<ParameterList> 	solverParams;
-	RCP<ParameterList> 	precParams;
+	RCP<VEC_t>			x, y;
+	RCP<VEC_t>			p;
+	RCP<VEC_t>			p_exat;
+	RCP<VEC_t>			f;
+	RCP<VEC_t>			err;
+	RCP<SPM_t>			A;
+	RCP<PREC_t>			M;
+	RCP<ParameterList>	solverParams;
+	RCP<ParameterList>	precParams;
 
 	// set x and y coordinates
 	x = rcp(new VEC_t(map));
@@ -159,16 +157,32 @@ int main(int argc, char **argv)
 	comm->barrier();
 	A->fillComplete();
 
+	const std::string test = "RILUK";
+	precParams = Teuchos::parameterList();
+	//precParams->set("fact: ilut level-of-fill", 1);
+	//precParams->set("fact: absolute threshold", 1);
+	//precParams->set("fact: relative threshold", 1);
+	//precParams->set("fact: relax value", 1);
+	
+	/*
+	const std::string test = "CHEBYSHEV";
+	precParams = Teuchos::parameterList();
+	*/
+
+	/*
 	const std::string test = "DIAGONAL";
+	precParams = Teuchos::parameterList();
+	*/
+
+	/*
+	const std::string test = "RELAXATION";
+	precParams = Teuchos::parameterList();
+	*/
 
 	RCP<const SPM_t> 	constA = rcpFromRef(*A);
 
 	M = Ifpack2::Factory::create(test, constA);
-	precParams = Teuchos::parameterList();
 	M->setObjectLabel("preconditioner");
-	//precParams->set("fact: ilut level-of-fill", 2.0);
-	//precParams->set("fact: drop tolerance", 0.0);
-	//precParams->set("fact: absolute threshold", 0.1);
 	M->setParameters(*precParams);
 	M->initialize();
 	M->compute();
@@ -189,9 +203,7 @@ int main(int argc, char **argv)
 	solverParams = Teuchos::parameterList();
 	solverParams->set("Convergence Tolerance", 1e-6);
 	solverParams->set("Maximum Iterations", 1000000);
-	solverParams->set("Assert Positive Definiteness", false);
-	//solverParams->set("Num Blocks", 1);
-	//solverParams->set("Maximum Restarts", 10);
+	solverParams->set("Orthogonalization", "ICGS");
 
 
 	// create solver factory
@@ -218,7 +230,10 @@ int main(int argc, char **argv)
 
 
 	// set preconditioner
-	problem->setRightPrec(M);
+	problem->setLeftPrec(M);
+
+	// tell the linear problem instance that the preconditioner is symmetric
+	problem->setHermitian();
 
 
 	// unknown command

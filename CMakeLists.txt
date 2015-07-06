@@ -66,14 +66,23 @@ link_directories(${Trilinos_LIBRARY_DIRS})
 link_directories(${Trilinos_TPL_LIBRARY_DIRS})
 
 # EDIT HERE! Executable file and corresponding source files
-add_executable(TriPoisson ${SOURCES1})
+add_executable(TriPoissonCPU ${SOURCES1})
+add_executable(TriPoissonGPU ${SOURCES1})
 add_executable(TriPoissonSOR ${SOURCES2})
 add_executable(TriPoissonDirect ${SOURCES3})
 
 # EDIT HERE! I'm not sure what this command is doing...
-target_link_libraries(TriPoisson ${Trilinos_LIBRARIES} 
-									${Trilinos_TPL_LIBRARIES})
+target_link_libraries(TriPoissonCPU ${Trilinos_LIBRARIES} 
+								 ${Trilinos_TPL_LIBRARIES})
+target_link_libraries(TriPoissonGPU ${Trilinos_LIBRARIES} 
+								 ${Trilinos_TPL_LIBRARIES})
 target_link_libraries(TriPoissonSOR ${Trilinos_LIBRARIES} 
 									${Trilinos_TPL_LIBRARIES})
 target_link_libraries(TriPoissonDirect ${Trilinos_LIBRARIES} 
-									${Trilinos_TPL_LIBRARIES})
+									   ${Trilinos_TPL_LIBRARIES})
+
+# EDIT HERE!
+target_compile_definitions(TriPoissonCPU PRIVATE 
+	"NODETYPE=Kokkos::Compat::KokkosSerialWrapperNode")
+target_compile_definitions(TriPoissonGPU PRIVATE 
+	"NODETYPE=Kokkos::Compat::KokkosCudaWrapperNode")

@@ -34,8 +34,8 @@ using Teuchos::TimeMonitor;
 typedef int 		LO_t;
 typedef int 		GO_t;
 typedef double 		SC_t;
-//typedef Kokkos::Compat::KokkosCudaWrapperNode 			ND_t;
-typedef Kokkos::Compat::KokkosSerialWrapperNode 			ND_t;
+typedef Kokkos::Compat::KokkosCudaWrapperNode 			ND_t;
+//typedef Kokkos::Compat::KokkosSerialWrapperNode 			ND_t;
 typedef Teuchos::Comm<int> 								COMM_t;
 typedef Tpetra::Map<LO_t, GO_t, ND_t> 					MAP_t;
 typedef Tpetra::Vector<SC_t, LO_t, GO_t, ND_t> 			VEC_t;
@@ -45,7 +45,7 @@ typedef Tpetra::Operator<SC_t, LO_t, GO_t, ND_t> 		OP_t;
 typedef RCP<const COMM_t> 								COMM_ptr_t;
 typedef RCP<const MAP_t> 								MAP_ptr_t;
 typedef RCP<FancyOStream> 								OUT_ptr_t;
-typedef Amesos2::Solver<SPM_t, VEC_t> 					SOLVER_t;
+typedef Amesos2::Solver<SPM_t, MV_t> 					SOLVER_t;
 
 
 void generateXY(MAP_ptr_t &, RCP<VEC_t> &, RCP<VEC_t> &, GO_t, SC_t);
@@ -164,21 +164,29 @@ int main(int argc, char **argv)
 	RCP<const SPM_t> 	constA = rcpFromRef(*A);
 	RCP<const VEC_t> 	constf = rcpFromRef(*f);
 
-	RCP<SOLVER_t> 		solver = Amesos2::create("Basker", constA, p, constf);
+	RCP<SOLVER_t> 		solver = 
+		Amesos2::create<SPM_t, MV_t>("Basker", constA, p, constf);
 	solver->Teuchos::Describable::describe(std::cout);
 
 	auto pp = solver->getValidParameters();
 	pp->print();
 
+	// create and start the timer
+	RCP<Time> 	solveTime = TimeMonitor::getNewCounter("Wall-time of solve()");
+	solveTime->enable();
+	solveTime->start(true);
+	// solve
 	solver->solve();
+	// stop timer
+	solveTime->stop();
 
 
 	err->update(1.0, *p, -1.0, *p_exat, 0);
 	SC_t 	norm2 = err->norm2();
 
-	*out << "\tL2 Norm of Errors: " << norm2 << std::endl;
-
 	TimeMonitor::summarize();
+
+	*out << "\tL2 Norm of Errors: " << norm2 << std::endl;
 
 	Tpetra::finalize();
 	return 0;
@@ -248,38 +256,38 @@ void generateA(MAP_ptr_t &map, RCP<SPM_t> &A, GO_t N)
 		GO_t 	gJ = gN / N;
 
 		if (gI == 0 && gJ == 0)
-			A->insertGlobalValues(gN, tuple<GO_t>(gN), tuple<SC_t>(1.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN), Teuchos::tuple<SC_t>(1.)); 
 
 		else if (gI == N - 1 && gJ == 0)
-			A->insertGlobalValues(gN, tuple<GO_t>(gN-1, gN, gN+N), 
-									 tuple<SC_t>(-1., 2., -1.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN-1, gN, gN+N), 
+									 Teuchos::tuple<SC_t>(-1., 2., -1.)); 
 
 		else if (gI == 0 && gJ == N - 1)
-			A->insertGlobalValues(gN, tuple<GO_t>(gN-N, gN, gN+1), 
-									 tuple<SC_t>(-1., 2., -1.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN-N, gN, gN+1), 
+									 Teuchos::tuple<SC_t>(-1., 2., -1.)); 
 
 		else if (gI == N - 1 && gJ == N - 1)
-			A->insertGlobalValues(gN, tuple<GO_t>(gN-N, gN-1, gN), 
-									 tuple<SC_t>(-1., -1., 2.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN-N, gN-1, gN), 
+									 Teuchos::tuple<SC_t>(-1., -1., 2.)); 
 
 		else if (gI == 0)
-			A->insertGlobalValues(gN, tuple<GO_t>(gN-N, gN, gN+1, gN+N), 
-									 tuple<SC_t>(-1., 3., -1., -1.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN-N, gN, gN+1, gN+N), 
+									 Teuchos::tuple<SC_t>(-1., 3., -1., -1.)); 
 
 		else if (gI == N - 1)
-			A->insertGlobalValues(gN, tuple<GO_t>(gN-N, gN-1, gN, gN+N), 
-									 tuple<SC_t>(-1., -1., 3., -1.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN-N, gN-1, gN, gN+N), 
+									 Teuchos::tuple<SC_t>(-1., -1., 3., -1.)); 
 
 		else if (gJ == 0)
-			A->insertGlobalValues(gN, tuple<GO_t>(gN-1, gN, gN+1, gN+N), 
-									 tuple<SC_t>(-1., 3., -1., -1.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN-1, gN, gN+1, gN+N), 
+									 Teuchos::tuple<SC_t>(-1., 3., -1., -1.)); 
 
 		else if (gJ == N - 1)
-			A->insertGlobalValues(gN, tuple<GO_t>(gN-N, gN-1, gN, gN+1), 
-									 tuple<SC_t>(-1., -1., 3., -1.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN-N, gN-1, gN, gN+1), 
+									 Teuchos::tuple<SC_t>(-1., -1., 3., -1.)); 
 
 		else
-			A->insertGlobalValues(gN, tuple<GO_t>(gN-N, gN-1, gN, gN+1, gN+N), 
-									 tuple<SC_t>(-1., -1., 4., -1., -1.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN-N, gN-1, gN, gN+1, gN+N), 
+									 Teuchos::tuple<SC_t>(-1., -1., 4., -1., -1.)); 
 	}
 }	
