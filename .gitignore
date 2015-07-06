@@ -1,7 +1,11 @@
 log.txt
-TriPoisson
 CMakeCache.txt
 CMakeFiles/
 Makefile
 *.cmake
 .*.swp
+TriPoissonGPU
+TriPoissonCPU
+TriPoissonDirect
+TriPoissonSOR
+
