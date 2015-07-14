@@ -3,154 +3,154 @@
 rm MVM_log.out
 
 echo "1 proc, 1 thread" >>MVM_log.out
-mpiexec -np 1 -bind-to none:overload-allowed ../buils/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
+mpiexec -np 1 -bind-to none:overload-allowed ../build/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "1 proc, 2 thread" >>MVM_log.out
-mpiexec -np 1 -bind-to none:overload-allowed ../buils/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=2 --Nx=5000 >>MVM_log.out
+mpiexec -np 1 -bind-to none:overload-allowed ../build/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=2 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "1 proc, 3 thread" >>MVM_log.out
-mpiexec -np 1 -bind-to none:overload-allowed ../buils/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=3 --Nx=5000 >>MVM_log.out
+mpiexec -np 1 -bind-to none:overload-allowed ../build/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=3 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "1 proc, 4 thread" >>MVM_log.out
-mpiexec -np 1 -bind-to none:overload-allowed ../buils/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=4 --Nx=5000 >>MVM_log.out
+mpiexec -np 1 -bind-to none:overload-allowed ../build/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=4 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "1 proc, 5 thread" >>MVM_log.out
-mpiexec -np 1 -bind-to none:overload-allowed ../buils/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=5 --Nx=5000 >>MVM_log.out
+mpiexec -np 1 -bind-to none:overload-allowed ../build/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=5 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "1 proc, 6 thread" >>MVM_log.out
-mpiexec -np 1 -bind-to none:overload-allowed ../buils/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=6 --Nx=5000 >>MVM_log.out
+mpiexec -np 1 -bind-to none:overload-allowed ../build/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=6 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 
 echo "2 proc, 1 thread" >>MVM_log.out
-mpiexec -np 2 -bind-to none:overload-allowed ../buils/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
+mpiexec -np 2 -bind-to none:overload-allowed ../build/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "2 proc, 2 thread" >>MVM_log.out
-mpiexec -np 2 -bind-to none:overload-allowed ../buils/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=2 --Nx=5000 >>MVM_log.out
+mpiexec -np 2 -bind-to none:overload-allowed ../build/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=2 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "2 proc, 3 thread" >>MVM_log.out
-mpiexec -np 2 -bind-to none:overload-allowed ../buils/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=3 --Nx=5000 >>MVM_log.out
+mpiexec -np 2 -bind-to none:overload-allowed ../build/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=3 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 
 echo "3 proc, 1 thread" >>MVM_log.out
-mpiexec -np 3 -bind-to none:overload-allowed ../buils/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
+mpiexec -np 3 -bind-to none:overload-allowed ../build/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "3 proc, 2 thread" >>MVM_log.out
-mpiexec -np 3 -bind-to none:overload-allowed ../buils/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=2 --Nx=5000 >>MVM_log.out
+mpiexec -np 3 -bind-to none:overload-allowed ../build/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=2 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 
 echo "4 proc, 1 thread" >>MVM_log.out
-mpiexec -np 4 -bind-to none:overload-allowed ../buils/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
+mpiexec -np 4 -bind-to none:overload-allowed ../build/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 
 echo "5 proc, 1 thread" >>MVM_log.out
-mpiexec -np 5 -bind-to none:overload-allowed ../buils/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
+mpiexec -np 5 -bind-to none:overload-allowed ../build/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 
 echo "6 proc, 1 thread" >>MVM_log.out
-mpiexec -np 6 -bind-to none:overload-allowed ../buils/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
+mpiexec -np 6 -bind-to none:overload-allowed ../build/MVM_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 
 echo "1 proc, 1 thread, 1 GPU" >>MVM_log.out
-mpiexec -np 1 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
+mpiexec -np 1 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "1 proc, 2 thread, 1 GPU" >>MVM_log.out
-mpiexec -np 1 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=2 --Nx=5000 >>MVM_log.out
+mpiexec -np 1 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=2 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "1 proc, 3 thread, 1 GPU" >>MVM_log.out
-mpiexec -np 1 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=3 --Nx=5000 >>MVM_log.out
+mpiexec -np 1 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=3 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "1 proc, 4 thread, 1 GPU" >>MVM_log.out
-mpiexec -np 1 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=4 --Nx=5000 >>MVM_log.out
+mpiexec -np 1 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=4 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "1 proc, 5 thread, 1 GPU" >>MVM_log.out
-mpiexec -np 1 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=5 --Nx=5000 >>MVM_log.out
+mpiexec -np 1 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=5 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "1 proc, 6 thread, 1 GPU" >>MVM_log.out
-mpiexec -np 1 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=6 --Nx=5000 >>MVM_log.out
+mpiexec -np 1 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=6 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 
 echo "2 proc, 1 thread, 1 GPU" >>MVM_log.out
-mpiexec -np 2 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
+mpiexec -np 2 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "2 proc, 2 thread, 1 GPU" >>MVM_log.out
-mpiexec -np 2 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=2 --Nx=5000 >>MVM_log.out
+mpiexec -np 2 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=2 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "2 proc, 3 thread, 1 GPU" >>MVM_log.out
-mpiexec -np 2 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=3 --Nx=5000 >>MVM_log.out
+mpiexec -np 2 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=3 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "3 proc, 1 thread, 1 GPU" >>MVM_log.out
-mpiexec -np 3 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
+mpiexec -np 3 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "3 proc, 2 thread, 1 GPU" >>MVM_log.out
-mpiexec -np 3 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=2 --Nx=5000 >>MVM_log.out
+mpiexec -np 3 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=2 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "4 proc, 1 thread, 1 GPU" >>MVM_log.out
-mpiexec -np 4 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
+mpiexec -np 4 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "5 proc, 1 thread, 1 GPU" >>MVM_log.out
-mpiexec -np 5 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
+mpiexec -np 5 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "6 proc, 1 thread, 1 GPU" >>MVM_log.out
-mpiexec -np 6 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
+mpiexec -np 6 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 
 
 echo "2 proc, 1 thread, 2 GPU" >>MVM_log.out
-mpiexec -np 2 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=2 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
+mpiexec -np 2 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=2 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "2 proc, 2 thread, 2 GPU" >>MVM_log.out
-mpiexec -np 2 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=2 --kokkos-threads=2 --Nx=5000 >>MVM_log.out
+mpiexec -np 2 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=2 --kokkos-threads=2 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "2 proc, 3 thread, 2 GPU" >>MVM_log.out
-mpiexec -np 2 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=2 --kokkos-threads=3 --Nx=5000 >>MVM_log.out
+mpiexec -np 2 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=2 --kokkos-threads=3 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "3 proc, 1 thread, 2 GPU" >>MVM_log.out
-mpiexec -np 3 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=2 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
+mpiexec -np 3 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=2 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "3 proc, 2 thread, 2 GPU" >>MVM_log.out
-mpiexec -np 3 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=2 --kokkos-threads=2 --Nx=5000 >>MVM_log.out
+mpiexec -np 3 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=2 --kokkos-threads=2 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "4 proc, 1 thread, 2 GPU" >>MVM_log.out
-mpiexec -np 4 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=2 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
+mpiexec -np 4 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=2 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "5 proc, 1 thread, 2 GPU" >>MVM_log.out
-mpiexec -np 5 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=2 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
+mpiexec -np 5 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=2 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
 echo "\n\n"
 
 echo "6 proc, 1 thread, 2 GPU" >>MVM_log.out
-mpiexec -np 6 -bind-to none:overload-allowed ../buils/MVM_MpiCuda --kokkos-ndevices=2 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
+mpiexec -np 6 -bind-to none:overload-allowed ../build/MVM_MpiCuda --kokkos-ndevices=2 --kokkos-threads=1 --Nx=5000 >>MVM_log.out
 echo "\n\n"
