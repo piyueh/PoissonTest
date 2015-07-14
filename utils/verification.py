@@ -3,7 +3,7 @@ from scipy import sparse
 from scipy.sparse import linalg
 
 L = 1.0
-N = 500
+N = 100
 dL = L / N
 
 n = 1.0
