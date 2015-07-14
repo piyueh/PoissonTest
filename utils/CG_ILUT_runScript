@@ -1,0 +1,156 @@
+#! /bin/bash
+
+rm CG_ILUT_log.out
+
+echo "[1;31;47m1 proc, 1 thread[m" >>CG_ILUT_log.out
+mpiexec -np 1 -bind-to core -map-by socket:PE=1 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m1 proc, 2 thread[m" >>CG_ILUT_log.out
+mpiexec -np 1 -bind-to core -map-by socket:PE=2 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiThreads --kokkos-ndevices=1 --kokkos-threads=2 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m1 proc, 3 thread[m" >>CG_ILUT_log.out
+mpiexec -np 1 -bind-to core -map-by socket:PE=3 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiThreads --kokkos-ndevices=1 --kokkos-threads=3 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m1 proc, 4 thread[m" >>CG_ILUT_log.out
+mpiexec -np 1 -bind-to core -map-by socket:PE=4 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiThreads --kokkos-ndevices=1 --kokkos-threads=4 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m1 proc, 5 thread[m" >>CG_ILUT_log.out
+mpiexec -np 1 -bind-to core -map-by socket:PE=5 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiThreads --kokkos-ndevices=1 --kokkos-threads=5 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m1 proc, 6 thread[m" >>CG_ILUT_log.out
+mpiexec -np 1 -bind-to core -map-by socket:PE=6 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiThreads --kokkos-ndevices=1 --kokkos-threads=6 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+
+echo "[1;31;47m2 proc, 1 thread[m" >>CG_ILUT_log.out
+mpiexec -np 2 -bind-to core -map-by socket:PE=1 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m2 proc, 2 thread[m" >>CG_ILUT_log.out
+mpiexec -np 2 -bind-to core -map-by socket:PE=2 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiThreads --kokkos-ndevices=1 --kokkos-threads=2 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m2 proc, 3 thread[m" >>CG_ILUT_log.out
+mpiexec -np 2 -bind-to core -map-by socket:PE=3 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiThreads --kokkos-ndevices=1 --kokkos-threads=3 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+
+echo "[1;31;47m3 proc, 1 thread[m" >>CG_ILUT_log.out
+mpiexec -np 3 -bind-to core -map-by socket:PE=1 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m3 proc, 2 thread[m" >>CG_ILUT_log.out
+mpiexec -np 3 -bind-to core -map-by socket:PE=2 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiThreads --kokkos-ndevices=1 --kokkos-threads=2 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+
+echo "[1;31;47m4 proc, 1 thread[m" >>CG_ILUT_log.out
+mpiexec -np 4 -bind-to core -map-by socket:PE=1 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+
+echo "[1;31;47m5 proc, 1 thread[m" >>CG_ILUT_log.out
+mpiexec -np 5 -bind-to core -map-by socket:PE=1 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+
+echo "[1;31;47m6 proc, 1 thread[m" >>CG_ILUT_log.out
+mpiexec -np 6 -bind-to core -map-by socket:PE=1 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiThreads --kokkos-ndevices=1 --kokkos-threads=1 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+
+echo "[1;31;47m1 proc, 1 thread, 1 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 1 -bind-to core -map-by socket:PE=1 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m1 proc, 2 thread, 1 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 1 -bind-to core -map-by socket:PE=2 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=1 --kokkos-threads=2 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m1 proc, 3 thread, 1 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 1 -bind-to core -map-by socket:PE=3 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=1 --kokkos-threads=3 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m1 proc, 4 thread, 1 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 1 -bind-to core -map-by socket:PE=4 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=1 --kokkos-threads=4 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m1 proc, 5 thread, 1 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 1 -bind-to core -map-by socket:PE=5 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=1 --kokkos-threads=5 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m1 proc, 6 thread, 1 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 1 -bind-to core -map-by socket:PE=6 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=1 --kokkos-threads=6 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+
+echo "[1;31;47m2 proc, 1 thread, 1 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 2 -bind-to core -map-by socket:PE=1 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m2 proc, 2 thread, 1 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 2 -bind-to core -map-by socket:PE=2 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=1 --kokkos-threads=2 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m2 proc, 3 thread, 1 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 2 -bind-to core -map-by socket:PE=3 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=1 --kokkos-threads=3 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m3 proc, 1 thread, 1 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 3 -bind-to core -map-by socket:PE=1 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m3 proc, 2 thread, 1 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 3 -bind-to core -map-by socket:PE=2 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=1 --kokkos-threads=2 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m4 proc, 1 thread, 1 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 4 -bind-to core -map-by socket:PE=1 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m5 proc, 1 thread, 1 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 5 -bind-to core -map-by socket:PE=1 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m6 proc, 1 thread, 1 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 6 -bind-to core -map-by socket:PE=1 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+
+
+echo "[1;31;47m2 proc, 1 thread, 2 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 2 -bind-to core -map-by socket:PE=1 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=2 --kokkos-threads=1 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m2 proc, 2 thread, 2 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 2 -bind-to core -map-by socket:PE=2 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=2 --kokkos-threads=2 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m2 proc, 3 thread, 2 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 2 -bind-to core -map-by socket:PE=3 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=2 --kokkos-threads=3 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m3 proc, 1 thread, 2 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 3 -bind-to core -map-by socket:PE=1 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=2 --kokkos-threads=1 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m3 proc, 2 thread, 2 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 3 -bind-to core -map-by socket:PE=2 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=2 --kokkos-threads=2 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m4 proc, 1 thread, 2 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 4 -bind-to core -map-by socket:PE=1 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=2 --kokkos-threads=1 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m5 proc, 1 thread, 2 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 5 -bind-to core -map-by socket:PE=1 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=2 --kokkos-threads=1 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out
+
+echo "[1;31;47m6 proc, 1 thread, 2 GPU[m" >>CG_ILUT_log.out
+mpiexec -np 6 -bind-to core -map-by socket:PE=1 -mca hwloc_base_mem_bind_failure_action silent ../build/TriPoisson_MpiCuda --kokkos-ndevices=2 --kokkos-threads=1 --Nx=1000 --solverName=CG --precName=ILUT >>CG_ILUT_log.out
+echo " ">>CG_ILUT_log.out

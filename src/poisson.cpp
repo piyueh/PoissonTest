@@ -88,7 +88,7 @@ int main(int argc, char **argv)
     int             Nx = 100;
     double          n = 1.0;
 
-    std::string precName = "DIAGONAL";
+    std::string precName = "NONE";
     std::string solverName = "CG";
 
     CommandLineProcessor         CLP;
@@ -111,23 +111,15 @@ int main(int argc, char **argv)
     double          Lx = 1.0;
     double          dx = Lx / double(Nx);
 
-    std::string     precParamsXML = "../ParamFiles" + precName + "_Params.xml";
-    std::string     solverParamsXML = "../ParamFiles" + solverName + "_Params.xml";
+    std::string     precParamsXML = "../ParamFiles/" + precName + "_Params.xml";
+    std::string     solverParamsXML = "../ParamFiles/" + solverName + "_Params.xml";
     
-    Kokkos::DefaultHostExecutionSpace::print_configuration(std::cout);
-    Kokkos::Cuda::print_configuration(std::cout);
-    comm->barrier();
-
 
     // create a Map 
     MAP_ptr_t   map = rcp(new MAP_t(N, 0, comm, Tpetra::GloballyDistributed));
 
     // obtain the number of nodes contained in current process
     int         localN = map->getNodeNumElements();
-
-    // output the infomation of this map
-    map->describe(*out);
-
 
 
     // definition of all variables
