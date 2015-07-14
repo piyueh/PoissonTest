@@ -111,8 +111,8 @@ int main(int argc, char **argv)
     double          Lx = 1.0;
     double          dx = Lx / double(Nx);
 
-    std::string     precParamsXML = precName + "_Params.xml";
-    std::string     solverParamsXML = solverName + "_Params.xml";
+    std::string     precParamsXML = "../ParamFiles" + precName + "_Params.xml";
+    std::string     solverParamsXML = "../ParamFiles" + solverName + "_Params.xml";
     
     Kokkos::DefaultHostExecutionSpace::print_configuration(std::cout);
     Kokkos::Cuda::print_configuration(std::cout);
