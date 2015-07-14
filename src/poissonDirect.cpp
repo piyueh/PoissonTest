@@ -13,8 +13,7 @@
 # include <Tpetra_MultiVector.hpp>
 # include <Tpetra_CrsMatrix.hpp>
 
-# include <BelosSolverFactory.hpp>
-# include <BelosTpetraAdapter.hpp>
+# include <Amesos2.hpp>
 
 # include <Ifpack2_Factory.hpp>
 # include <Ifpack2_Preconditioner.hpp>
@@ -31,23 +30,22 @@ using Teuchos::CommandLineProcessor;
 using Teuchos::Time;
 using Teuchos::TimeMonitor;
 
+
 typedef int 		LO_t;
 typedef int 		GO_t;
 typedef double 		SC_t;
-typedef NODETYPE	ND_t;
-typedef Teuchos::Comm<int>									COMM_t;
-typedef Tpetra::Map<LO_t, GO_t, ND_t>						MAP_t;
-typedef Tpetra::Vector<SC_t, LO_t, GO_t, ND_t>				VEC_t;
-typedef Tpetra::CrsMatrix<SC_t, LO_t, GO_t, ND_t>			SPM_t;
-typedef Tpetra::MultiVector<SC_t, LO_t, GO_t, ND_t> 		MV_t;
-typedef Tpetra::Operator<SC_t, LO_t, GO_t, ND_t>			OP_t;
-typedef RCP<const COMM_t>									COMM_ptr_t;
-typedef RCP<const MAP_t>									MAP_ptr_t;
-typedef RCP<FancyOStream>									OUT_ptr_t;
-typedef Belos::SolverFactory<SC_t, MV_t, OP_t>				SolverFactory;
-typedef Belos::SolverManager<SC_t, MV_t, OP_t>				SolverManager;
-typedef Belos::LinearProblem<SC_t, MV_t, OP_t>				LinearProblem;
-typedef Ifpack2::Preconditioner<SC_t, LO_t, GO_t, ND_t>		PREC_t;
+//typedef Kokkos::Compat::KokkosCudaWrapperNode 			ND_t;
+typedef Kokkos::Compat::KokkosSerialWrapperNode 			ND_t;
+typedef Teuchos::Comm<int> 								COMM_t;
+typedef Tpetra::Map<LO_t, GO_t, ND_t> 					MAP_t;
+typedef Tpetra::Vector<SC_t, LO_t, GO_t, ND_t> 			VEC_t;
+typedef Tpetra::CrsMatrix<SC_t, LO_t, GO_t, ND_t> 		SPM_t;
+typedef Tpetra::MultiVector<SC_t, LO_t, GO_t, ND_t> 	MV_t;
+typedef Tpetra::Operator<SC_t, LO_t, GO_t, ND_t> 		OP_t;
+typedef RCP<const COMM_t> 								COMM_ptr_t;
+typedef RCP<const MAP_t> 								MAP_ptr_t;
+typedef RCP<FancyOStream> 								OUT_ptr_t;
+typedef Amesos2::Solver<SPM_t, MV_t> 					SOLVER_t;
 
 
 void generateXY(MAP_ptr_t &, RCP<VEC_t> &, RCP<VEC_t> &, GO_t, SC_t);
@@ -111,15 +109,13 @@ int main(int argc, char **argv)
 	*out << std::endl;
 
 	// definition of all variables
-	RCP<VEC_t>			x, y;
-	RCP<VEC_t>			p;
-	RCP<VEC_t>			p_exat;
-	RCP<VEC_t>			f;
-	RCP<VEC_t>			err;
-	RCP<SPM_t>			A;
-	RCP<PREC_t>			M;
-	RCP<ParameterList>	solverParams;
-	RCP<ParameterList>	precParams;
+	RCP<VEC_t> 		x, y;
+	RCP<VEC_t> 		p;
+	RCP<VEC_t> 		p_exat;
+	RCP<VEC_t> 		f;
+	RCP<VEC_t> 		err;
+	RCP<SPM_t> 		A;
+	RCP<ParameterList> 	solverParams;
 
 	// set x and y coordinates
 	x = rcp(new VEC_t(map));
@@ -128,6 +124,8 @@ int main(int argc, char **argv)
 	y->setObjectLabel("y coordinates");
 	generateXY(map, x, y, Nx, dx);
 	comm->barrier();
+	x->print(std::cout);
+	y->print(std::cout);
 
 
 	// set unknowns p and its exact solution
@@ -137,6 +135,8 @@ int main(int argc, char **argv)
 	p_exat->setObjectLabel("exact solution");
 	generateExactSoln(map, p_exat, x, y, n);
 	comm->barrier();
+	p->print(std::cout);
+	p_exat->print(std::cout);
 
 
 
@@ -145,10 +145,12 @@ int main(int argc, char **argv)
 	f->setObjectLabel("RHS");
 	generateRHS(map, f, x, y, n, dx);
 	comm->barrier();
+	f->print(std::cout);
 
 
 	err = rcp(new VEC_t(map));
 	err->setObjectLabel("absolute error");
+	err->print(std::cout);
 
 
 	A = rcp(new SPM_t(map, 5, Tpetra::StaticProfile));
@@ -156,118 +158,35 @@ int main(int argc, char **argv)
 	generateA(map, A, Nx);
 	comm->barrier();
 	A->fillComplete();
+	A->print(std::cout);
 
-	const std::string test = "RILUK";
-	precParams = Teuchos::parameterList();
-	//precParams->set("fact: ilut level-of-fill", 1);
-	//precParams->set("fact: absolute threshold", 1);
-	//precParams->set("fact: relative threshold", 1);
-	//precParams->set("fact: relax value", 1);
-	
-	/*
-	const std::string test = "CHEBYSHEV";
-	precParams = Teuchos::parameterList();
-	*/
-
-	/*
-	const std::string test = "DIAGONAL";
-	precParams = Teuchos::parameterList();
-	*/
-
-	/*
-	const std::string test = "RELAXATION";
-	precParams = Teuchos::parameterList();
-	*/
 
 	RCP<const SPM_t> 	constA = rcpFromRef(*A);
+	RCP<const VEC_t> 	constf = rcpFromRef(*f);
 
-	M = Ifpack2::Factory::create(test, constA);
-	M->setObjectLabel("preconditioner");
-	M->setParameters(*precParams);
-	M->initialize();
-	M->compute();
+	RCP<SOLVER_t> 		solver = 
+		Amesos2::create<SPM_t, MV_t>("SuperLU", constA, p, constf);
+	solver->Teuchos::Describable::describe(std::cout);
 
-	/*
-	RCP<Time> 	solveTime = TimeMonitor::getNewCounter("Wall-time of solve()");
-	solveTime->enable();
-	solveTime->reset();
-	for(int i=0; i<100; ++i)
-	{
-		solveTime->start();
-		M->apply(*f, *p);
-		solveTime->stop();
-	}
-	*/
-
-	// create linear system and solver
-	solverParams = Teuchos::parameterList();
-	solverParams->set("Convergence Tolerance", 1e-6);
-	solverParams->set("Maximum Iterations", 1000000);
-	solverParams->set("Orthogonalization", "ICGS");
-
-
-	// create solver factory
-	SolverFactory 	factory;
-
-
-	// to show all available solvers
-	auto 	availSolvers = factory.supportedSolverNames();
-	for(auto it=availSolvers.begin(); it!=availSolvers.end(); ++it)
-		std::cout << *it << std::endl;
-
-
-	// create solver
-	RCP<SolverManager> 	solver = factory.create("GMRES", solverParams);
-
-
-	// get available parameters of currently selected solver
-	RCP<const ParameterList> 	availParams = solver->getCurrentParameters();
-	availParams->print();
-
-
-	// create problem set
-	RCP<LinearProblem> 	problem = rcp(new LinearProblem (A, p, f));
-
-
-	// set preconditioner
-	problem->setLeftPrec(M);
-
-	// tell the linear problem instance that the preconditioner is symmetric
-	problem->setHermitian();
-
-
-	// unknown command
-	problem->setProblem();
-
-
-	// link the solver and the problem set
-	solver->setProblem(problem);
-
-	solver->describe(std::cout);
-
+	auto pp = solver->getValidParameters();
+	pp->print();
 
 	// create and start the timer
 	RCP<Time> 	solveTime = TimeMonitor::getNewCounter("Wall-time of solve()");
 	solveTime->enable();
 	solveTime->start(true);
-	// solve the problem
-	Belos::ReturnType 	result = solver->solve();
+	// solve
+	solver->solve();
 	// stop timer
 	solveTime->stop();
 
-	if (result == Belos::Converged)
-		*out << "Success" << std::endl;
-	else
-		*out << "Failed" << std::endl;
 
 	err->update(1.0, *p, -1.0, *p_exat, 0);
 	SC_t 	norm2 = err->norm2();
 
-	*out << "\tL2 Norm of Errors: " << norm2 << std::endl;
-	*out << "\tNumber of Iterations: " 
-		 << solver->getNumIters() << std::endl;
-
 	TimeMonitor::summarize();
+
+	*out << "\tL2 Norm of Errors: " << norm2 << std::endl;
 
 	Tpetra::finalize();
 	return 0;
@@ -337,38 +256,38 @@ void generateA(MAP_ptr_t &map, RCP<SPM_t> &A, GO_t N)
 		GO_t 	gJ = gN / N;
 
 		if (gI == 0 && gJ == 0)
-			A->insertGlobalValues(gN, tuple<GO_t>(gN), tuple<SC_t>(1.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN), Teuchos::tuple<SC_t>(1.)); 
 
 		else if (gI == N - 1 && gJ == 0)
-			A->insertGlobalValues(gN, tuple<GO_t>(gN-1, gN, gN+N), 
-									 tuple<SC_t>(-1., 2., -1.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN-1, gN, gN+N), 
+									 Teuchos::tuple<SC_t>(-1., 2., -1.)); 
 
 		else if (gI == 0 && gJ == N - 1)
-			A->insertGlobalValues(gN, tuple<GO_t>(gN-N, gN, gN+1), 
-									 tuple<SC_t>(-1., 2., -1.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN-N, gN, gN+1), 
+									 Teuchos::tuple<SC_t>(-1., 2., -1.)); 
 
 		else if (gI == N - 1 && gJ == N - 1)
-			A->insertGlobalValues(gN, tuple<GO_t>(gN-N, gN-1, gN), 
-									 tuple<SC_t>(-1., -1., 2.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN-N, gN-1, gN), 
+									 Teuchos::tuple<SC_t>(-1., -1., 2.)); 
 
 		else if (gI == 0)
-			A->insertGlobalValues(gN, tuple<GO_t>(gN-N, gN, gN+1, gN+N), 
-									 tuple<SC_t>(-1., 3., -1., -1.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN-N, gN, gN+1, gN+N), 
+									 Teuchos::tuple<SC_t>(-1., 3., -1., -1.)); 
 
 		else if (gI == N - 1)
-			A->insertGlobalValues(gN, tuple<GO_t>(gN-N, gN-1, gN, gN+N), 
-									 tuple<SC_t>(-1., -1., 3., -1.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN-N, gN-1, gN, gN+N), 
+									 Teuchos::tuple<SC_t>(-1., -1., 3., -1.)); 
 
 		else if (gJ == 0)
-			A->insertGlobalValues(gN, tuple<GO_t>(gN-1, gN, gN+1, gN+N), 
-									 tuple<SC_t>(-1., 3., -1., -1.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN-1, gN, gN+1, gN+N), 
+									 Teuchos::tuple<SC_t>(-1., 3., -1., -1.)); 
 
 		else if (gJ == N - 1)
-			A->insertGlobalValues(gN, tuple<GO_t>(gN-N, gN-1, gN, gN+1), 
-									 tuple<SC_t>(-1., -1., 3., -1.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN-N, gN-1, gN, gN+1), 
+									 Teuchos::tuple<SC_t>(-1., -1., 3., -1.)); 
 
 		else
-			A->insertGlobalValues(gN, tuple<GO_t>(gN-N, gN-1, gN, gN+1, gN+N), 
-									 tuple<SC_t>(-1., -1., 4., -1., -1.)); 
+			A->insertGlobalValues(gN, Teuchos::tuple<GO_t>(gN-N, gN-1, gN, gN+1, gN+N), 
+									 Teuchos::tuple<SC_t>(-1., -1., 4., -1., -1.)); 
 	}
 }	

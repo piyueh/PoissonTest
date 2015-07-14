@@ -1,0 +1,10 @@
+#! /bin/bash
+
+rm nohup.out
+
+echo "test1"
+mpiexec -np 1 MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=100
+
+
+echo "test2"
+mpiexec -np 1 MVM_MpiCuda --kokkos-ndevices=1 --kokkos-threads=1 --Nx=200

@@ -3,7 +3,7 @@ from scipy import sparse
 from scipy.sparse import linalg
 
 L = 1.0
-N = 10
+N = 500
 dL = L / N
 
 n = 1.0
@@ -35,10 +35,10 @@ for gN in range(N*N):
     gJ = int(gN / N)
 
     if gI == 0 and gJ == 0:
-        row = numpy.append(row, numpy.array([gN]))
-        col = numpy.append(col, numpy.array([gN]))
-        data = numpy.append(data, numpy.array([1]))
-        f[gN] = p_extSoln(X[gJ, gI], Y[gJ, gI], n)
+        row = numpy.append(row, numpy.array(3*[gN]))
+        col = numpy.append(col, numpy.array([gN, gN+1, gN+N]))
+        data = numpy.append(data, numpy.array([3, -1, -1]))
+        f[gN] += p_extSoln(X[gJ, gI], Y[gJ, gI], n)
     elif gI == N-1 and gJ == 0:
         row = numpy.append(row, numpy.array(3*[gN]))
         col = numpy.append(col, numpy.array([gN-1, gN, gN+N]))
@@ -93,10 +93,12 @@ print("p0:\n", p, "\n")
 print("f:\n", f ,"\n")
 print("Factor:\n", f/p_ext ,"\n")
 
-p, info = linalg.cg(A, f, p, tol=1e-2, maxiter=1000000, M=M)
+p, info = linalg.cg(A, f, p, tol=1e-15, maxiter=1000000)
+#p, info = linalg.cg(A, f, p, tol=1e-2, maxiter=1000000, M=M)
 #p, info = linalg.bicgstab(A, f, p, tol=1e-15, M=M)
 #p, info = linalg.gmres(A, f, p, tol=1e-15, restart=1)
 
+p -= numpy.average(p)
 print("p:\n", p, "\n")
 print("p exact:\n", p_ext, "\n")
 print(p.shape, p_ext.shape)
