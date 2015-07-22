@@ -10,5 +10,5 @@ TriPoissonDirect
 TriPoissonSOR
 **/*.out
 **/__pycache__/
-
+utils/PythonScripts/AmgXsystem.mtx
 build/
