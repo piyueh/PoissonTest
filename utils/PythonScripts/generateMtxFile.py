@@ -7,7 +7,7 @@ from generateVecs import p_extSoln, RHS
 
 
 L = 1.0
-Nx = Ny = 100
+Nx = Ny = 1000
 dL = L / Nx
 
 n = 1.0
@@ -22,14 +22,11 @@ A = generateA(Nx, Ny)
 p = numpy.zeros(Nx * Ny)
 f = RHS(X, Y, n, dL)
 
-io.mmwrite("AmgXsystem.mtx", A)
+io.mmwrite("AmgXsystem.mtx", A, "%AMGX rhs solution")
 
 file = open("AmgXsystem.mtx", "ab")
 
-file.write(bytes("%%rhs\n", "UTF-8"))
 numpy.savetxt(file, f, '%.18e')
-
-file.write(bytes("%%solution\n", "UTF-8"))
 numpy.savetxt(file, p, '%.18e')
 
 file.close()
