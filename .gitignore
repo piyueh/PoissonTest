@@ -8,3 +8,5 @@
 **/__pycache__/
 **/*.mtx
 **/build/
+**/bin
+**/.logamgx
