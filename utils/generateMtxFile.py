@@ -18,9 +18,9 @@ y = numpy.linspace(dL/2.0, L-dL/2.0, Ny)
 X, Y = numpy.meshgrid(x, y)
 
 
-A = generateA(Nx, Ny)
+A = generateA(Nx, Ny, dL, dL)
 p = numpy.zeros(Nx * Ny)
-f = RHS(X, Y, n, dL)
+f = RHS(X, Y, n)
 
 io.mmwrite("AmgXsystem.mtx", A, "%AMGX rhs solution")
 
