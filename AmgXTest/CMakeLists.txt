@@ -63,13 +63,13 @@ MESSAGE("AMGX_DIR in order to notify CMake the location of AmgX\n")
 MESSAGE("-- Finding amgx_c.h")
 FIND_PATH(AMGX_INCLUDE_DIRS 
           NAMES amgx_c.h  
-          PATHS $ENV{AMGX_DIR} 
+          PATHS ${AMGX_DIR} $ENV{AMGX_DIR} 
           PATH_SUFFIXES "include")
 
 IF(${AMGX_INCLUDE_DIRS} STREQUAL "AMGX_INCLUDE_DIRS-NOTFOUND")
     MESSAGE(FATAL_ERROR "Could not find amgx_c.h!!!")
 ELSE()
-    MESSAGE("-- Finding amgx_c.h - found")
+    MESSAGE("-- Finding amgx_c.h - found in " ${AMGX_INCLUDE_DIRS})
 ENDIF()
 
 
@@ -102,13 +102,13 @@ ENDIF()
 MESSAGE("-- Finding libamgxsh.so")
 FIND_LIBRARY(AMGX_LIBRARIES
              NAMES amgxsh
-             PATHS $ENV{AMGX_DIR}
+             PATHS ${AMGX_DIR} $ENV{AMGX_DIR}
              PATH_SUFFIXES "lib")
 
 IF(${AMGX_LIBRARIES} STREQUAL "AMGX_LIBRARIES-NOTFOUND")
     MESSAGE(FATAL_ERROR "libamgxsh.so was not found")
 ELSE()
-    MESSAGE("-- Finding libamgxsh.so - found")
+    MESSAGE("-- Finding libamgxsh.so - found: " ${AMGX_LIBRARIES})
 ENDIF()
 
 
@@ -150,6 +150,7 @@ MESSAGE("Setting the information for target and source files...")
 
 SET(SRC ${CMAKE_SOURCE_DIR}/src)
 SET(SOURCE1 ${SRC}/sGPU_file.cpp)
+SET(SOURCE2 ${SRC}/sGPU.cpp)
 
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} 
                     ${CUDA_INCLUDE_DIRS} 
@@ -159,6 +160,11 @@ LINK_DIRECTORIES(${Boost_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
 
 
 ADD_EXECUTABLE(sGPU_loadFromFile ${SOURCE1})
+ADD_EXECUTABLE(sGPU ${SOURCE2})
+
 TARGET_LINK_LIBRARIES(sGPU_loadFromFile ${Boost_LIBRARIES}
                                         ${CUDA_LIBRARIES}
                                         ${AMGX_LIBRARIES})
+TARGET_LINK_LIBRARIES(sGPU ${Boost_LIBRARIES}
+                           ${CUDA_LIBRARIES}
+                           ${AMGX_LIBRARIES})
