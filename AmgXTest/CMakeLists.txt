@@ -115,7 +115,7 @@ ENDIF()
 
 MESSAGE("\n===================================================================")
 MESSAGE("Trying to find Boost...\n")
-FIND_PACKAGE(Boost REQUIRED COMPONENTS program_options)
+FIND_PACKAGE(Boost REQUIRED COMPONENTS program_options timer system)
 
 IF(${Boost_FOUND})
     MESSAGE("\tBoost_INCLUDE_DIRS: " ${Boost_INCLUDE_DIRS})
@@ -152,8 +152,11 @@ SET(SRC ${CMAKE_SOURCE_DIR}/src)
 SET(SOURCE1 ${SRC}/sGPU_file.cpp)
 SET(SOURCE2 ${SRC}/sGPU.cpp)
 
+#INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} 
+#                    ${CUDA_INCLUDE_DIRS} 
+#                    ${AMGX_INCLUDE_DIRS})
+
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} 
-                    ${CUDA_INCLUDE_DIRS} 
                     ${AMGX_INCLUDE_DIRS})
 
 LINK_DIRECTORIES(${Boost_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})

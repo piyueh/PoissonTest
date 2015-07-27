@@ -6,6 +6,7 @@
 # include <cmath>
 # include <amgx_c.h>
 # include <boost/program_options.hpp>
+# include <boost/timer/timer.hpp>
 
 
 typedef std::map<std::string, std::string>      paramsMap;
@@ -53,6 +54,7 @@ std::ostream & operator<<(std::ostream &os, std::vector<T> x);
 
 int main(int argc, char **argv)
 {
+    using namespace boost;
 
     paramsMap       CMDparams;
 
@@ -86,6 +88,15 @@ int main(int argc, char **argv)
     Vec                     x,
                             y;
 
+    timer::cpu_timer    timer;
+    std::string         uploadTime,
+                        setupTime,
+                        solveTime,
+                        downloadTime;
+
+
+
+    // initialize problem
     Nx = std::stoi(CMDparams["Nx"]);
     Ny = std::stoi(CMDparams["Ny"]);
 
@@ -99,7 +110,7 @@ int main(int argc, char **argv)
     exactSolution(Nx, Ny, p_exact, x, y);
 
     
-    // initialize
+    // initialize AmgX
     AMGX_SAFE_CALL(AMGX_initialize());
     AMGX_SAFE_CALL(AMGX_initialize_plugins());
 
@@ -117,7 +128,6 @@ int main(int argc, char **argv)
     // create a config object using an input file
     AMGX_SAFE_CALL(AMGX_config_create_from_file(&cfg, 
                                 CMDparams["configFile"].c_str()));
-
     // to let the AmgX handle errors internally, so AMGX_SAFE_CALL can be 
     // discarded after this point and before the destroy of this config object
     AMGX_SAFE_CALL(AMGX_config_add_parameters(&cfg, "exception_handling=1"));
@@ -143,37 +153,49 @@ int main(int argc, char **argv)
     AMGX_solver_create(&solver, rsrc, mode, cfg);
 
 
+    // pin host memory
+    AMGX_pin_memory(b.data(), sizeof(double)*b.size());
+    AMGX_pin_memory(p.data(), sizeof(double)*p.size());
+    AMGX_pin_memory(A.rowIdx.data(), sizeof(int)*A.rowIdx.size());
+    AMGX_pin_memory(A.colIdx.data(), sizeof(int)*A.colIdx.size());
+    AMGX_pin_memory(A.data.data(), sizeof(double)*A.data.size());
+
+
+
     // copy data from original data to AmgX data structure
     AMGX_vector_upload(AmgX_b, A.Nrows, 1, b.data());
     AMGX_vector_upload(AmgX_p, A.Nrows, 1, p.data());
     AMGX_matrix_upload_all(AmgX_A, A.Nrows, A.Nnz, 1, 1, 
             A.rowIdx.data(), A.colIdx.data(), A.data.data(), nullptr);
+    uploadTime = timer.format();
 
 
+    timer.start();
     // bind A to the solver
     AMGX_solver_setup(solver, AmgX_A);
+    setupTime = timer.format();
 
 
+    timer.start();
     // solve
     AMGX_solver_solve(solver, AmgX_b, AmgX_p);
+    solveTime = timer.format();
 
 
     // get the status of the solver
     AMGX_solver_get_status(solver, &status);
     std::cout << "Status: " << status << std::endl;
 
+
     // write A, b, x yo an output .mtx file
     if (CMDparams.count("output"))
         AMGX_write_system(AmgX_A, AmgX_b, AmgX_p, CMDparams["output"].c_str());
     
 
+    timer.start();
     // Download data from device to host
     AMGX_vector_download(AmgX_p, p.data());
-
-
-    std::ofstream       solnFile("solution.txt");
-    solnFile << p << std::endl;
-    solnFile.close();
+    downloadTime = timer.format();
 
 
     double      err = errL2Norm(A.Nrows, p, p_exact);
@@ -186,11 +208,20 @@ int main(int argc, char **argv)
     AMGX_vector_destroy(AmgX_b);
     AMGX_vector_destroy(AmgX_p);
     AMGX_resources_destroy(rsrc);
-
     AMGX_SAFE_CALL(AMGX_config_destroy(cfg));
-
     AMGX_SAFE_CALL(AMGX_finalize_plugins());
     AMGX_SAFE_CALL(AMGX_finalize());
+
+
+    std::cout << std::endl;
+    std::cout << "Upload time: " << std::endl;
+    std::cout << "\t" << uploadTime << std::endl;
+    std::cout << "Setup time: " << std::endl;
+    std::cout << "\t" << setupTime << std::endl;
+    std::cout << "Solve time: " << std::endl;
+    std::cout << "\t" << solveTime << std::endl;
+    std::cout << "Download time: " << std::endl;
+    std::cout << "\t" << downloadTime << std::endl;
 
     return 0;
 }
