@@ -2,16 +2,18 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 
 MESSAGE("===================================================================")
-MESSAGE("Specifying CXX compiler and flags...")
-MESSAGE("\nNOTE: The default setting is based on the environment variable CXX.")
-MESSAGE("If CXX is not defined, clang++ will be used.\n") 
+MESSAGE("Specifying CXX compiler and flags...\n")
+MESSAGE("NOTE: clang++ is default C++ compiler. To use other compiler, ")
+MESSAGE("please define the environment variable CXX\n")
 
-IF(NOT DEFINED ENV{CXX})
+IF (NOT DEFINED ENV{CXX})
     SET(CMAKE_CXX_COMPILER "clang++")
     MESSAGE("CXX compiler: clang++")
 ELSE()
-    MESSAGE("CXX compiler: " $ENV{CXX})
+    SET(CMAKE_CXX_COMPILER $ENV{CXX})
+    MESSAGE("CXX compiler: " ${CMAKE_CXX_COMPILER})
 ENDIF()
+
 
 SET(CMAKE_CXX_FLAGS "-std=c++11" CACHE STRING "")
 SET(CMAKE_CXX_FLAGS_DEBUG "-g" CACHE STRING "")
@@ -20,14 +22,16 @@ SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING "")
 
 
 MESSAGE("\n===================================================================")
-MESSAGE("Specifying C compiler and flags...")
-MESSAGE("\nNOTE: The default setting is based on the environment variable CC.")
-MESSAGE("If CC is not defined, clang will be used.\n") 
-IF(NOT DEFINED ENV{CC})
+MESSAGE("Specifying C compiler and flags...\n")
+MESSAGE("NOTE: clang is default C compiler. To use other compiler, ")
+MESSAGE("please define the environment variable CXX\n")
+
+IF (NOT DEFINED ENV{CC})
     SET(CMAKE_C_COMPILER "clang")
     MESSAGE("C compiler: clang")
 ELSE()
-    MESSAGE("C compiler: " $ENV{CC})
+    SET(CMAKE_C_COMPILER $ENV{CC})
+    MESSAGE("C compiler: " ${CMAKE_C_COMPILER})
 ENDIF()
 
 SET(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING "")
@@ -46,7 +50,7 @@ ENDIF()
 
 MESSAGE("-- Build type: " ${CMAKE_BUILD_TYPE})
 
-
+SET(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
 
 MESSAGE("\n===================================================================")
 MESSAGE("Starting generator...")
@@ -149,25 +153,19 @@ MESSAGE("\n===================================================================")
 MESSAGE("Setting the information for target and source files...")
 
 SET(SRC ${CMAKE_SOURCE_DIR}/src)
-SET(SOURCE1 ${SRC}/sGPU_file.cpp)
-SET(SOURCE2 ${SRC}/sGPU.cpp)
-
-#INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} 
-#                    ${CUDA_INCLUDE_DIRS} 
-#                    ${AMGX_INCLUDE_DIRS})
+SET(SOURCE1 ${SRC}/sGPU.cpp ${SRC}/miscsFuncs.cpp ${SRC}/SpMt.cpp)
 
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} 
+                    ${CUDA_INCLUDE_DIRS}
                     ${AMGX_INCLUDE_DIRS})
 
-LINK_DIRECTORIES(${Boost_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
+LINK_DIRECTORIES(${Boost_LIBRARY_DIRS}
+                 ${CUDA_LIBRARY_DIRS}
+                 ${AMGX_LIBRARY_DIRS})
 
 
-ADD_EXECUTABLE(sGPU_loadFromFile ${SOURCE1})
-ADD_EXECUTABLE(sGPU ${SOURCE2})
+ADD_EXECUTABLE(sGPU ${SOURCE1})
 
-TARGET_LINK_LIBRARIES(sGPU_loadFromFile ${Boost_LIBRARIES}
-                                        ${CUDA_LIBRARIES}
-                                        ${AMGX_LIBRARIES})
 TARGET_LINK_LIBRARIES(sGPU ${Boost_LIBRARIES}
-                           ${CUDA_LIBRARIES}
-                           ${AMGX_LIBRARIES})
+                           ${AMGX_LIBRARIES}
+                           ${CUDA_LIBRARIES})

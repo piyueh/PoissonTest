@@ -1,69 +1,56 @@
-# include <iostream>
-# include <fstream>
-# include <vector>
-# include <string>
-# include <map>
-# include <cmath>
-# include <amgx_c.h>
-# include <boost/program_options.hpp>
-# include <boost/timer/timer.hpp>
-
-
-typedef std::map<std::string, std::string>      paramsMap;
-typedef std::vector<double>                     Vec;
-
-
-class SpMt
-{
-    public:
-
-        SpMt() = default;
-
-        int                     Nrows,
-                                Nnz;
-        std::vector<int>        rowIdx,
-                                colIdx;
-        std::vector<double>     data;
-};
-
-
-void print_callback(const char *, int);
-void init_CMDparser(int, char **, paramsMap &);
-void setMode(std::string, AMGX_Mode &);
-
-void generateA(const int &Nx, const int &Ny, 
-               const double &dx, const double &dy, SpMt &A);
-
-void generateXY(const int &Nx, const int &Ny,
-                const double &Lx, const double &Ly,
-                double &dx, double &dy, Vec &x, Vec &y);
-
-void generateRHS(const int &Nx, const int &Ny, 
-                 Vec &b, const Vec &x, const Vec &y);
-
-void generateZerosVec(const int &N, Vec &p);
-
-void exactSolution(const int &Nx, const int &Ny,
-                   Vec &p_exact, const Vec &x, const Vec &y);
-    
-double errL2Norm(const int &N, const Vec &p, const Vec &p_exact);
-
-template<typename T>
-std::ostream & operator<<(std::ostream &os, std::vector<T> x);
+# include "headers.hpp"
 
 
 int main(int argc, char **argv)
 {
     using namespace boost;
 
+    // a map containning user-input parameters through CMD
     paramsMap       CMDparams;
 
-    init_CMDparser(argc, argv, CMDparams);
+    // parse CMD parameters and save into CMDparams
+    parseCMD(argc, argv, CMDparams);
 
-    for(auto it: CMDparams)
-        std::cout << it.first << ": " << it.second << std::endl;
+    // print out the user-input parameters
+    std::cout << "Input parameters: " << std::endl;
+    if (CMDparams.count("input"))
+        std::cout << "\t" << "input: " << CMDparams["input"] << std::endl;
+    else
+    {
+        for(auto it: CMDparams)
+            std::cout << "\t" << it.first << ": " << it.second << std::endl;
+    }
 
 
+    // definition of original data
+    // scalar parameters
+    int                     Ntol,
+                            Nx, 
+                            Ny;
+    double                  Lx,
+                            Ly;
+    double                  dx,
+                            dy;
+
+
+    // containers
+    HostVec                     x,
+                                y;
+    HostSpMt                    hA;
+    HostVec                     hp,
+                                hb;
+    DeviceSpMt                  dA;
+    DeviceVec                   dp,
+                                db;
+
+    // raw pointers
+    double                      *b,
+                                *p,
+                                *Adata;
+    int                         *Arow,
+                                *Acol;
+
+    // definition of all data related to AmgX
     AMGX_Mode               mode;
     AMGX_config_handle      cfg;
     AMGX_resources_handle   rsrc;
@@ -73,21 +60,8 @@ int main(int argc, char **argv)
     AMGX_solver_handle      solver;
     AMGX_SOLVE_STATUS       status;
 
-    int                     Nx, 
-                            Ny;
-    double                  Lx,
-                            Ly;
-    double                  dx,
-                            dy;
 
-
-    SpMt                    A;
-    Vec                     p,
-                            b,
-                            p_exact;
-    Vec                     x,
-                            y;
-
+    // variabled for timer
     timer::cpu_timer    timer;
     std::string         uploadTime,
                         setupTime,
@@ -96,20 +70,31 @@ int main(int argc, char **argv)
 
 
 
-    // initialize problem
-    Nx = std::stoi(CMDparams["Nx"]);
-    Ny = std::stoi(CMDparams["Ny"]);
+    if (! CMDparams.count("input"))
+    {
+        // initialize problem
+        Nx = std::stoi(CMDparams["Nx"]);
+        Ny = std::stoi(CMDparams["Ny"]);
+        Ntol = Nx * Ny;
 
-    Lx = 1.0;
-    Ly = 1.0;
+        Lx = 1.0;
+        Ly = 1.0;
 
-    generateXY(Nx, Ny, Lx, Ly, dx, dy, x, y);
-    generateA(Nx, Ny, dx, dy, A);
-    generateRHS(Nx, Ny, b, x, y);
-    generateZerosVec(A.Nrows, p);
-    exactSolution(Nx, Ny, p_exact, x, y);
+        generateXY(Nx, Ny, Lx, Ly, dx, dy, x, y);
+        generateA(Nx, Ny, dx, dy, hA);
+        generateRHS(Nx, Ny, hb, x, y);
+        generateZerosVec(Ntol, hp);
 
+        // move original data from host to device
+        if (CMDparams["type"] == "device")
+        {
+            dA = hA;
+            dp = hp;
+            db = hb;
+        }
+    }
     
+
     // initialize AmgX
     AMGX_SAFE_CALL(AMGX_initialize());
     AMGX_SAFE_CALL(AMGX_initialize_plugins());
@@ -153,31 +138,65 @@ int main(int argc, char **argv)
     AMGX_solver_create(&solver, rsrc, mode, cfg);
 
 
-    // pin host memory
-    AMGX_pin_memory(b.data(), sizeof(double)*b.size());
-    AMGX_pin_memory(p.data(), sizeof(double)*p.size());
-    AMGX_pin_memory(A.rowIdx.data(), sizeof(int)*A.rowIdx.size());
-    AMGX_pin_memory(A.colIdx.data(), sizeof(int)*A.colIdx.size());
-    AMGX_pin_memory(A.data.data(), sizeof(double)*A.data.size());
+    if (! CMDparams.count("input"))
+    {
+        // pin host memory
+        if (CMDparams["type"] == "host")
+        {
+            b = hb.data();
+            p = hp.data();
+            Arow = hA.rowIdx.data();
+            Acol = hA.colIdx.data();
+            Adata = hA.data.data();
+
+            AMGX_pin_memory(b, sizeof(double)*hb.size());
+            AMGX_pin_memory(p, sizeof(double)*hp.size());
+            AMGX_pin_memory(Arow, sizeof(int)*hA.rowIdx.size());
+            AMGX_pin_memory(Acol, sizeof(int)*hA.colIdx.size());
+            AMGX_pin_memory(Adata, sizeof(double)*hA.data.size());
+        }
+        else if (CMDparams["type"] == "device")
+        {
+            b = thrust::raw_pointer_cast(db.data());
+            p = thrust::raw_pointer_cast(dp.data());
+            Arow = thrust::raw_pointer_cast(dA.rowIdx.data());
+            Acol = thrust::raw_pointer_cast(dA.colIdx.data());
+            Adata = thrust::raw_pointer_cast(dA.data.data());
+
+        }
+        else
+        {
+            std::cerr << "Unknown type: " 
+                      << CMDparams["type"] << std::endl;
+            exit(0);
+        }
+
+        // copy data from original data to AmgX data structure
+        timer.start();
+        AMGX_vector_upload(AmgX_b, hA.Nrows, 1, b);
+        AMGX_vector_upload(AmgX_p, hA.Nrows, 1, p);
+        AMGX_matrix_upload_all(AmgX_A, hA.Nrows, hA.Nnz, 1, 1, 
+                               Arow, Acol, Adata, nullptr);
+        uploadTime = timer.format();
+    }
+    else
+    {
+        // read linear system (1 matrix, 2 vectors) from a .mtx file
+        AMGX_read_system(AmgX_A, AmgX_b, AmgX_p, CMDparams["input"].c_str());
+        
+        // check and show information of the linear systems
+        Ntol = showSysInfo(AmgX_A, AmgX_b, AmgX_p);
+    }
 
 
-
-    // copy data from original data to AmgX data structure
-    AMGX_vector_upload(AmgX_b, A.Nrows, 1, b.data());
-    AMGX_vector_upload(AmgX_p, A.Nrows, 1, p.data());
-    AMGX_matrix_upload_all(AmgX_A, A.Nrows, A.Nnz, 1, 1, 
-            A.rowIdx.data(), A.colIdx.data(), A.data.data(), nullptr);
-    uploadTime = timer.format();
-
-
-    timer.start();
     // bind A to the solver
+    timer.start();
     AMGX_solver_setup(solver, AmgX_A);
     setupTime = timer.format();
 
 
-    timer.start();
     // solve
+    timer.start();
     AMGX_solver_solve(solver, AmgX_b, AmgX_p);
     solveTime = timer.format();
 
@@ -192,14 +211,19 @@ int main(int argc, char **argv)
         AMGX_write_system(AmgX_A, AmgX_b, AmgX_p, CMDparams["output"].c_str());
     
 
-    timer.start();
     // Download data from device to host
-    AMGX_vector_download(AmgX_p, p.data());
-    downloadTime = timer.format();
+    if (CMDparams.count("input"))
+        std::cout << "No exact solution available for this system." << std::endl;
+    else
+    {
+        timer.start();
+        AMGX_vector_download(AmgX_p, p);
+        downloadTime = timer.format();
 
+        if (CMDparams["type"] == "device") hp = dp;
 
-    double      err = errL2Norm(A.Nrows, p, p_exact);
-    std::cout << "Error (L2 Norm): " << err << std::endl;
+        checkError(Nx, Ny, hp, x, y);
+    }
 
 
     // destroy and finalize
@@ -227,363 +251,3 @@ int main(int argc, char **argv)
 }
 
 
-void print_callback(const char *msg, int length)
-{
-    std::cout << msg;
-}
-
-
-void init_CMDparser(int argc, char **argv, paramsMap & CMDparams)
-{
-
-    using namespace boost::program_options;
-    using std::string;
-
-    // database that describes all possible parameter
-    options_description         helpArgList;
-    options_description         mainArgList;
-    options_description         allArgList("AmgX test.");
-
-    // a map that contain parameters and corresponding values after parsing
-    variables_map          vm;
-
-
-    // set up the database
-    helpArgList.add_options()
-        ("help,h", "Print this help screen")
-        ("version,v", "Print the version of AmgX");
-
-    mainArgList.add_options()
-        ("mode,m", value<string>()->default_value("dDDI"), "mode")
-        ("configFile,c", value<string>()->required(), "Configuration file")
-        ("output,o", value<string>(), "Output file")
-        ("Nx", value<string>()->default_value("1000"), "Nx")
-        ("Ny", value<string>()->default_value("1000"), "Ny");
-
-    allArgList.add(helpArgList);
-    allArgList.add(mainArgList);
-
-
-    try
-    {
-        // parse_command_line parses the command line arguments and returns
-        // an object of type "parsed-options"
-        // store() put the content of an object of type "parsed-object" into
-        // a map (variable_map is derived from STL map)
-        command_line_parser     helpParser(argc, argv);
-        helpParser.options(helpArgList);
-        helpParser.allow_unregistered();
-        store(helpParser.run(), vm);
-
-        // notify() activates all parameters that have "notifier". It also saves
-        // values into corresponding variables if there are variables in 
-        // value<>().
-        notify(vm);
-
-        if (vm.count("help"))
-        {
-            std::cout << allArgList << std::endl;
-            exit(0);
-        }
-        else if (vm.count("version"))
-        {
-            int     major, minor;
-            char    *ver, *date, *time;
-
-            AMGX_get_api_version(&major, &minor);
-            AMGX_get_build_info_strings(&ver, &date, &time);
-
-            std::cout << "AmgX api version: " 
-                      << major << "." << minor << std::endl;
-            std::cout << "AmgX build version: "
-                      << ver << std::endl
-                      << "Build date and time: " << date << " " << time 
-                      << std::endl;
-            exit(0);    
-        }
-        else
-        {
-            // another way to parse arguments
-            store(parse_command_line(argc, argv, mainArgList), vm);
-            notify(vm);
-
-            CMDparams["Mode"] = vm["mode"].as<string>();
-            CMDparams["configFile"] = vm["configFile"].as<string>();
-            CMDparams["Nx"] = vm["Nx"].as<string>();
-            CMDparams["Ny"] = vm["Ny"].as<string>();
-
-            if (vm.count("output")) 
-                CMDparams["output"] = vm["output"].as<string>();
-        }
-    }
-    catch(const error &ex)
-    {
-        std::cerr << ex.what() << std::endl;
-    }
-}
-
-
-void setMode(std::string mode_, AMGX_Mode & mode)
-{
-    if (mode_ == "hDDI")
-        mode = AMGX_mode_hDDI;
-    else if (mode_ == "hDFI")
-        mode = AMGX_mode_hDFI;
-    else if (mode_ == "hFFI")
-        mode = AMGX_mode_hFFI;
-    else if (mode_ == "dDDI")
-        mode = AMGX_mode_dDDI;
-    else if (mode_ == "dDFI")
-        mode = AMGX_mode_dDFI;
-    else if (mode_ == "dFFI")
-        mode = AMGX_mode_dFFI;
-    else
-    {
-        std::cerr << "error: " 
-                  << mode_ << " is not an available mode." << std::endl;
-        exit(0);
-    }
-}
-
-
-void generateA(const int &Nx, const int &Ny, 
-               const double &dx, const double &dy, SpMt &A)
-{
-    double      coeff_x = 1.0 / (dx * dx),
-                coeff_y = 1.0 / (dy * dy),
-                coeff_diag = - 2.0 * (coeff_x + coeff_y);
-
-    //double      coeff_x = 1.0 * (dy * dy),
-    //            coeff_y = 1.0 * (dx * dx),
-    //            coeff_diag = - 2.0 * (coeff_x + coeff_y);
-
-    //double      coeff_x = 1.0,
-    //            coeff_y = 1.0,
-    //            coeff_diag = - 4.0;
-
-    A.Nnz = 0;
-    A.Nrows = Nx * Ny;
-    A.rowIdx.reserve(A.Nrows+1);
-    A.colIdx.reserve(A.Nrows*5);
-    A.data.reserve(A.Nrows*5);
-
-    for(int i=0; i<A.Nrows; ++i)
-    {
-        int     grid_i = i % Nx,
-                grid_j = i / Nx;
-
-        A.rowIdx.emplace_back(A.Nnz);
-
-        if (grid_i == 0 && grid_j == 0)
-        {
-            A.colIdx.emplace_back(i);
-            A.colIdx.emplace_back(i+1);
-            A.colIdx.emplace_back(i+Nx);
-
-            A.data.emplace_back(coeff_diag + coeff_x + coeff_y + 1.0);
-            A.data.emplace_back(coeff_x);
-            A.data.emplace_back(coeff_y);
-
-            A.Nnz += 3;
-        }
-        else if (grid_i == Nx - 1 && grid_j == 0)
-        {
-            A.colIdx.emplace_back(i-1);
-            A.colIdx.emplace_back(i);
-            A.colIdx.emplace_back(i+Nx);
-
-            A.data.emplace_back(coeff_x);
-            A.data.emplace_back(coeff_diag + coeff_x + coeff_y);
-            A.data.emplace_back(coeff_y);
-
-            A.Nnz += 3;
-        }
-        else if (grid_i == 0 && grid_j == Ny - 1)
-        {
-            A.colIdx.emplace_back(i-Nx);
-            A.colIdx.emplace_back(i);
-            A.colIdx.emplace_back(i+1);
-
-            A.data.emplace_back(coeff_y);
-            A.data.emplace_back(coeff_diag + coeff_x + coeff_y);
-            A.data.emplace_back(coeff_x);
-
-            A.Nnz += 3;
-        }
-        else if (grid_i == Nx - 1 && grid_j == Ny - 1)
-        {
-            A.colIdx.emplace_back(i-Nx);
-            A.colIdx.emplace_back(i-1);
-            A.colIdx.emplace_back(i);
-
-            A.data.emplace_back(coeff_y);
-            A.data.emplace_back(coeff_x);
-            A.data.emplace_back(coeff_diag + coeff_x + coeff_y);
-
-            A.Nnz += 3;
-        }
-        else if (grid_i == 0)
-        {
-            A.colIdx.emplace_back(i-Nx);
-            A.colIdx.emplace_back(i);
-            A.colIdx.emplace_back(i+1);
-            A.colIdx.emplace_back(i+Nx);
-
-            A.data.emplace_back(coeff_y);
-            A.data.emplace_back(coeff_diag + coeff_x);
-            A.data.emplace_back(coeff_x);
-            A.data.emplace_back(coeff_y);
-
-            A.Nnz += 4;
-        }
-        else if (grid_i == Nx - 1)
-        {
-            A.colIdx.emplace_back(i-Nx);
-            A.colIdx.emplace_back(i-1);
-            A.colIdx.emplace_back(i);
-            A.colIdx.emplace_back(i+Nx);
-
-            A.data.emplace_back(coeff_y);
-            A.data.emplace_back(coeff_x);
-            A.data.emplace_back(coeff_diag + coeff_x);
-            A.data.emplace_back(coeff_y);
-
-            A.Nnz += 4;
-        }
-        else if (grid_j == 0)
-        {
-            A.colIdx.emplace_back(i-1);
-            A.colIdx.emplace_back(i);
-            A.colIdx.emplace_back(i+1);
-            A.colIdx.emplace_back(i+Nx);
-
-            A.data.emplace_back(coeff_x);
-            A.data.emplace_back(coeff_diag + coeff_y);
-            A.data.emplace_back(coeff_x);
-            A.data.emplace_back(coeff_y);
-
-            A.Nnz += 4;
-        }
-        else if (grid_j == Ny - 1)
-        {
-            A.colIdx.emplace_back(i-Nx);
-            A.colIdx.emplace_back(i-1);
-            A.colIdx.emplace_back(i);
-            A.colIdx.emplace_back(i+1);
-
-            A.data.emplace_back(coeff_y);
-            A.data.emplace_back(coeff_x);
-            A.data.emplace_back(coeff_diag + coeff_y);
-            A.data.emplace_back(coeff_x);
-
-            A.Nnz += 4;
-        }
-        else
-        {
-            A.colIdx.emplace_back(i-Nx);
-            A.colIdx.emplace_back(i-1);
-            A.colIdx.emplace_back(i);
-            A.colIdx.emplace_back(i+1);
-            A.colIdx.emplace_back(i+Nx);
-
-            A.data.emplace_back(coeff_y);
-            A.data.emplace_back(coeff_x);
-            A.data.emplace_back(coeff_diag);
-            A.data.emplace_back(coeff_x);
-            A.data.emplace_back(coeff_y);
-
-            A.Nnz += 5;
-        }
-    }
-
-    A.rowIdx.emplace_back(A.Nnz);
-    A.colIdx.shrink_to_fit();
-    A.data.shrink_to_fit();
-}
-
-
-void generateXY(const int &Nx, const int &Ny,
-                const double &Lx, const double &Ly,
-                double &dx, double &dy, Vec &x, Vec &y)
-{
-    dx = Lx / Nx;
-    dy = Ly / Ny;
-
-    x.reserve(Nx);
-    y.reserve(Ny);
-
-    for(int i=0; i<Nx; ++i) x.emplace_back(i*dx+dx/2.0);
-    for(int j=0; j<Ny; ++j) y.emplace_back(j*dy+dy/2.0);
-}
-
-
-void generateRHS(const int &Nx, const int &Ny, 
-                 Vec &b, const Vec &x, const Vec &y)
-{
-    double      coeff1 = 2.0 * M_PI,
-                coeff2 = - 8.0 * M_PI * M_PI;
-
-    b.reserve(Nx*Ny);
-    b.resize(Nx*Ny);
-
-    for(int i=0; i<Nx*Ny; ++i)
-    {
-        int     grid_i = i % Nx,
-                grid_j = i / Nx;
-
-        b[i] = coeff2 * 
-               std::cos(coeff1 * x[grid_i]) * 
-               std::cos(coeff1 * y[grid_j]);
-    }
-
-    b[0] += std::cos(coeff1 * x[0]) * std::cos(coeff1 * y[0]);
-}
-
-
-void generateZerosVec(const int &N, Vec &p)
-{
-    p.reserve(N);
-    p.resize(N);
-
-    for(auto &it: p)    it = 0.0;
-}
-
-
-void exactSolution(const int &Nx, const int &Ny,
-                   Vec &p_exact, const Vec &x, const Vec &y)
-{
-    double      coeff = 2.0 * M_PI;
-
-    p_exact.reserve(Nx*Ny);
-    p_exact.resize(Nx*Ny);
-
-    for(int i=0; i<Nx*Ny; ++i)
-    {
-        int     grid_i = i % Nx,
-                grid_j = i / Nx;
-
-        p_exact[i] = std::cos(coeff * x[grid_i]) * 
-                     std::cos(coeff * y[grid_j]);
-    }
-}
-
-
-double errL2Norm(const int &N, const Vec &p, const Vec &p_exact)
-{
-    double      err = 0.0;
-
-    for(size_t i=0; i<N; ++i)
-        err += (p[i] - p_exact[i]) * (p[i] - p_exact[i]);
-
-    err = std::sqrt(err);
-
-    return err;
-}
-
-
-template<typename T>
-std::ostream & operator<<(std::ostream &os, std::vector<T> x)
-{
-	for(auto i: x) os << i << " ";
-	return os;
-}
