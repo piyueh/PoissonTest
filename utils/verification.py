@@ -5,9 +5,11 @@ from generateA import generateA
 from generateDiaPrec import generateDiaPrec
 from generateVecs import p_extSoln, RHS
 
+import time
+
 Lx = Ly = 1.0
-Nx = 100
-Ny = 100
+Nx = 200
+Ny = 200
 dx = Lx / Nx
 dy = Ly / Ny
 
@@ -35,9 +37,12 @@ print("p0:\n", p, "\n")
 print("f:\n", f ,"\n")
 print("Factor:\n", f/p_ext ,"\n")
 
+bg = time.clock()
 #p, info = linalg.cg(A, f, p, tol=1e-15, maxiter=1000000, M=M)
-p, info = linalg.bicgstab(A, f, p, tol=1e-12, M=M)
+#p, info = linalg.bicgstab(A, f, p, tol=1e-12, M=M)
+p, info = linalg.bicgstab(A, f, p, tol=1e-10)
 #p, info = linalg.gmres(A, f, p, tol=1e-15, restart=1)
+ed = time.clock()
 
 print("p:\n", p, "\n")
 print("p exact:\n", p_ext, "\n")
@@ -52,3 +57,4 @@ print("Info: \t\t", info, "\n")
 print("L2Norm:\t\t", L2norm, "\n")
 print("LInfNorm:\t", LInfnorm, "\n")
 
+print("CPU time of solve: ", ed - bg)

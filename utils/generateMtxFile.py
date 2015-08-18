@@ -7,7 +7,7 @@ from generateVecs import p_extSoln, RHS
 
 
 L = 1.0
-Nx = Ny = 1000
+Nx = Ny = 3500
 dL = L / Nx
 
 n = 1.0

@@ -5,8 +5,22 @@ int main(int argc, char **argv)
 {
     using namespace boost;
 
+
+    // initialize mpi
+    mpi::environment            env{argc, argv};
+    mpi::communicator           world;
+
+
+
+    // create a black hole that will be use by the output of other ranks
+    std::basic_ostream<char>    blackHole(nullptr);
+    std::ostream                &out = 
+        (world.rank() == 0) ? std::cout : blackHole;
+
+
+
     // a map containning user-input parameters through CMD
-    paramsMap       CMDparams;
+    paramsMap                   CMDparams;
 
     // parse CMD parameters and save into CMDparams
     parseCMD(argc, argv, CMDparams);
@@ -16,21 +30,20 @@ int main(int argc, char **argv)
     if (CMDparams.count("input"))
         std::cout << "\t" << "input: " << CMDparams["input"] << std::endl;
     else
-    {
         for(auto it: CMDparams)
             std::cout << "\t" << it.first << ": " << it.second << std::endl;
-    }
+
 
 
     // definition of original data
     // scalar parameters
-    int                     Ntol,
-                            Nx, 
-                            Ny;
-    double                  Lx,
-                            Ly;
-    double                  dx,
-                            dy;
+    int                         Ntol,
+                                Nx, 
+                                Ny;
+    double                      Lx,
+                                Ly;
+    double                      dx,
+                                dy;
 
 
     // containers
@@ -50,27 +63,77 @@ int main(int argc, char **argv)
     int                         *Arow,
                                 *Acol;
 
+
+    // variables for distributed system
+    int                         myRank = world.rank(),
+                                Npart = world.size(),
+                                &NpartVec = Ntol,
+                                Ndevs;
+    HostVecInt                  partSize(Npart),
+                                partVec,
+                                devs;
+
+
     // definition of all data related to AmgX
-    AMGX_Mode               mode;
-    AMGX_config_handle      cfg;
-    AMGX_resources_handle   rsrc;
-    AMGX_matrix_handle      AmgX_A;
-    AMGX_vector_handle      AmgX_p,
-                            AmgX_b;
-    AMGX_solver_handle      solver;
-    AMGX_SOLVE_STATUS       status;
+    AMGX_Mode                   mode;
+    AMGX_config_handle          cfg;
+    AMGX_resources_handle       rsrc;
+    AMGX_matrix_handle          AmgX_A;
+    AMGX_vector_handle          AmgX_p,
+                                AmgX_b;
+    AMGX_solver_handle          solver;
+    AMGX_SOLVE_STATUS           status;
 
 
     // variabled for timer
-    timer::cpu_timer    timer;
-    std::string         uploadTime,
-                        setupTime,
-                        solveTime,
-                        downloadTime;
+    timer::cpu_timer            timer;
+    std::string                 uploadTime,
+                                setupTime,
+                                solveTime,
+                                downloadTime;
 
 
 
-    if (! CMDparams.count("input"))
+
+    // obtain the number of devices and set the device used by this rank
+    CHECK(cudaGetDeviceCount(&Ndevs));
+    devs.push_back(myRank % Ndevs);
+
+
+
+    if (CMDparams.count("input"))
+    {
+
+        // get the total number of rows
+        NpartVec = fetchMtxSize(CMDparams["input"]);
+        world.barrier();
+
+
+        // generate the vector partSize
+        {
+            int     Nbasic = Ntol / Npart;
+            int     Nremain = Ntol % Npart;
+            for(int i=0; i<Npart; ++i) partSize[i] = Nbasic;
+            for(int i=0; i<Nremain; ++i) partSize[i] += 1;
+        }
+        world.barrier();
+
+
+        // generate the vector partVec
+        {
+            partVec.resize(NpartVec);
+
+            int     bg = 0, ed = 0;
+            for(int i=0; i<Npart; ++i)
+            {
+                ed += partSize[i];
+                for(int j=bg; j<ed; ++j) partVec[j] = i;
+                bg = ed;
+            }
+        }
+        world.barrier();
+    }
+    else
     {
         // initialize problem
         Nx = std::stoi(CMDparams["Nx"]);
@@ -120,7 +183,8 @@ int main(int argc, char **argv)
 
     // create a resource object based on the current configuration
     // "simple" means this is for single CPU thread and single GPU
-    AMGX_resources_create_simple(&rsrc, cfg);
+    MPI_Comm        comm = (ompi_communicator_t *)world;
+    AMGX_resources_create(&rsrc, cfg, &comm, 1, devs.data());
 
 
     // assign memory space to the two vectors
@@ -138,7 +202,30 @@ int main(int argc, char **argv)
     AMGX_solver_create(&solver, rsrc, mode, cfg);
 
 
-    if (! CMDparams.count("input"))
+    if (CMDparams.count("input"))
+    {
+        int         rings;
+
+        // obtain the default rings based on the config
+        AMGX_config_get_default_number_of_rings(cfg, &rings);
+        world.barrier();
+
+        std::cout << "Default rings: " << rings << std::endl;
+
+        // read linear system (1 matrix, 2 vectors) from a .mtx file
+        // AmgX will automatically read data distributedly
+        AMGX_read_system_distributed(AmgX_A, AmgX_b, AmgX_p, 
+                                     CMDparams["input"].c_str(), rings, 
+                                     Npart, partSize.data(), 
+                                     NpartVec, partVec.data());
+        world.barrier();
+        
+        // check and show information of the linear systems
+        rings = showSysInfo(AmgX_A, AmgX_b, AmgX_p);
+        std::cout << rings << std::endl;
+        world.barrier();
+    }
+    else
     {
         // pin host memory
         if (CMDparams["type"] == "host")
@@ -179,26 +266,20 @@ int main(int argc, char **argv)
                                Arow, Acol, Adata, nullptr);
         uploadTime = timer.format();
     }
-    else
-    {
-        // read linear system (1 matrix, 2 vectors) from a .mtx file
-        AMGX_read_system(AmgX_A, AmgX_b, AmgX_p, CMDparams["input"].c_str());
-        
-        // check and show information of the linear systems
-        Ntol = showSysInfo(AmgX_A, AmgX_b, AmgX_p);
-    }
 
 
     // bind A to the solver
     timer.start();
     AMGX_solver_setup(solver, AmgX_A);
     setupTime = timer.format();
+    world.barrier();
 
 
     // solve
     timer.start();
     AMGX_solver_solve(solver, AmgX_b, AmgX_p);
     solveTime = timer.format();
+    world.barrier();
 
 
     // get the status of the solver

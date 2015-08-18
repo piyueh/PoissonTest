@@ -104,9 +104,7 @@ void parseCMD(int argc, char **argv, paramsMap & CMDparams)
         }
     }
     catch(const error &ex)
-    {
         std::cerr << ex.what() << std::endl;
-    }
 }
 
 
@@ -134,11 +132,11 @@ void setMode(std::string mode_, AMGX_Mode & mode)
 
 
 void generateA(const int &Nx, const int &Ny, 
-               const double &dx, const double &dy, HostSpMt &A)
+               const double &dx, const double &dy, HostSpMt &A, HostVec &rhs)
 {
-    double      coeff_x = 1.0 / (dx * dx),
-                coeff_y = 1.0 / (dy * dy),
-                coeff_diag = - 2.0 * (coeff_x + coeff_y);
+    double      cx = 1.0 / (dx * dx),
+                cy = 1.0 / (dy * dy),
+                cd = - 2.0 * (cx + cy);
 
     int         tempI = 0;
 
@@ -161,9 +159,9 @@ void generateA(const int &Nx, const int &Ny,
             A.colIdx.push_back(i+1);
             A.colIdx.push_back(i+Nx);
 
-            A.data.push_back(coeff_diag + coeff_x + coeff_y + 1.0);
-            A.data.push_back(coeff_x);
-            A.data.push_back(coeff_y);
+            A.data.push_back(cd+cx+cy+1);
+            A.data.push_back(cx);
+            A.data.push_back(cy);
 
             tempI += 3;
         }
@@ -173,9 +171,9 @@ void generateA(const int &Nx, const int &Ny,
             A.colIdx.push_back(i);
             A.colIdx.push_back(i+Nx);
 
-            A.data.push_back(coeff_x);
-            A.data.push_back(coeff_diag + coeff_x + coeff_y);
-            A.data.push_back(coeff_y);
+            A.data.push_back(cx);
+            A.data.push_back(cd+cx+cy);
+            A.data.push_back(cy);
 
             tempI += 3;
         }
@@ -185,9 +183,9 @@ void generateA(const int &Nx, const int &Ny,
             A.colIdx.push_back(i);
             A.colIdx.push_back(i+1);
 
-            A.data.push_back(coeff_y);
-            A.data.push_back(coeff_diag + coeff_x + coeff_y);
-            A.data.push_back(coeff_x);
+            A.data.push_back(cy);
+            A.data.push_back(cd+cx+cy);
+            A.data.push_back(cx);
 
             tempI += 3;
         }
@@ -197,9 +195,9 @@ void generateA(const int &Nx, const int &Ny,
             A.colIdx.push_back(i-1);
             A.colIdx.push_back(i);
 
-            A.data.push_back(coeff_y);
-            A.data.push_back(coeff_x);
-            A.data.push_back(coeff_diag + coeff_x + coeff_y);
+            A.data.push_back(cy);
+            A.data.push_back(cx);
+            A.data.push_back(cd+cx+cy);
 
             tempI += 3;
         }
@@ -210,10 +208,10 @@ void generateA(const int &Nx, const int &Ny,
             A.colIdx.push_back(i+1);
             A.colIdx.push_back(i+Nx);
 
-            A.data.push_back(coeff_y);
-            A.data.push_back(coeff_diag + coeff_x);
-            A.data.push_back(coeff_x);
-            A.data.push_back(coeff_y);
+            A.data.push_back(cy);
+            A.data.push_back(cd+cx);
+            A.data.push_back(cx);
+            A.data.push_back(cy);
 
             tempI += 4;
         }
@@ -224,10 +222,10 @@ void generateA(const int &Nx, const int &Ny,
             A.colIdx.push_back(i);
             A.colIdx.push_back(i+Nx);
 
-            A.data.push_back(coeff_y);
-            A.data.push_back(coeff_x);
-            A.data.push_back(coeff_diag + coeff_x);
-            A.data.push_back(coeff_y);
+            A.data.push_back(cy);
+            A.data.push_back(cx);
+            A.data.push_back(cd+cx);
+            A.data.push_back(cy);
 
             tempI += 4;
         }
@@ -238,10 +236,10 @@ void generateA(const int &Nx, const int &Ny,
             A.colIdx.push_back(i+1);
             A.colIdx.push_back(i+Nx);
 
-            A.data.push_back(coeff_x);
-            A.data.push_back(coeff_diag + coeff_y);
-            A.data.push_back(coeff_x);
-            A.data.push_back(coeff_y);
+            A.data.push_back(cx);
+            A.data.push_back(cd+cy);
+            A.data.push_back(cx);
+            A.data.push_back(cy);
 
             tempI += 4;
         }
@@ -252,10 +250,10 @@ void generateA(const int &Nx, const int &Ny,
             A.colIdx.push_back(i);
             A.colIdx.push_back(i+1);
 
-            A.data.push_back(coeff_y);
-            A.data.push_back(coeff_x);
-            A.data.push_back(coeff_diag + coeff_y);
-            A.data.push_back(coeff_x);
+            A.data.push_back(cy);
+            A.data.push_back(cx);
+            A.data.push_back(cd+cy);
+            A.data.push_back(cx);
 
             tempI += 4;
         }
@@ -267,11 +265,11 @@ void generateA(const int &Nx, const int &Ny,
             A.colIdx.push_back(i+1);
             A.colIdx.push_back(i+Nx);
 
-            A.data.push_back(coeff_y);
-            A.data.push_back(coeff_x);
-            A.data.push_back(coeff_diag);
-            A.data.push_back(coeff_x);
-            A.data.push_back(coeff_y);
+            A.data.push_back(cy);
+            A.data.push_back(cx);
+            A.data.push_back(cd);
+            A.data.push_back(cx);
+            A.data.push_back(cy);
 
             tempI += 5;
         }
@@ -321,7 +319,6 @@ void generateRHS(const int &Nx, const int &Ny,
                std::cos(coeff1 * x[grid_i]) * 
                std::cos(coeff1 * y[grid_j]);
     }
-
     b[0] += std::cos(coeff1 * x[0]) * std::cos(coeff1 * y[0]);
 }
 
@@ -457,3 +454,26 @@ std::ostream & operator<<(std::ostream &os, std::vector<T> x)
 	return os;
 }
 
+
+int fetchMtxSize(std::string mtxFile)
+{
+    std::ifstream       file(mtxFile);
+    std::string         line;
+    int                 N;
+
+    while(std::getline(file, line))
+    {
+        std::istringstream      wholeLine(line);
+        std::string             var;
+
+        wholeLine >> var;
+
+        if (var[0] != '%')
+        {
+            std::istringstream(var) >> N;
+            break;
+        }
+    }
+
+    return N;
+}

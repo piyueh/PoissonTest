@@ -119,7 +119,7 @@ ENDIF()
 
 MESSAGE("\n===================================================================")
 MESSAGE("Trying to find Boost...\n")
-FIND_PACKAGE(Boost REQUIRED COMPONENTS program_options timer system)
+FIND_PACKAGE(Boost REQUIRED COMPONENTS program_options timer system mpi)
 
 IF(${Boost_FOUND})
     MESSAGE("\tBoost_INCLUDE_DIRS: " ${Boost_INCLUDE_DIRS})
@@ -150,14 +150,36 @@ ENDIF()
 
 
 MESSAGE("\n===================================================================")
+MESSAGE("Trying to find MPI")
+
+FIND_PACKAGE(MPI REQUIRED)
+
+IF(${MPI_CXX_FOUND})
+    MESSAGE("\tFound MPI: " ${MPI_CXX_FOUND})
+    MESSAGE("\tMPI_CXX_COMPILER: " ${MPI_CXX_COMPILER})
+    MESSAGE("\tMPI_CXX_COMPILE_FLAGS: " ${MPI_CXX_COMPILE_FLAGS})
+    MESSAGE("\tMPI_CXX_INCLUDE_PATH: " ${MPI_CXX_INCLUDE_PATH})
+    MESSAGE("\tMPI_CXX_LINK_FLAGS: " ${MPI_CXX_LINK_FLAGS})
+    MESSAGE("\tMPI_CXX_LIBRARIES: " ${MPI_CXX_LIBRARIES})
+    #SET (CMAKE_CXX_COMPILE_FLAGS "${CMAKE_CXX_COMPILE_FLAGS} 
+    #${MPI_CXX_COMPILE_FLAGS}")
+                                  #SET (CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} 
+                                  #${MPI_CXX_LINK_FLAGS}")
+ENDIF()
+
+
+
+MESSAGE("\n===================================================================")
 MESSAGE("Setting the information for target and source files...")
 
 SET(SRC ${CMAKE_SOURCE_DIR}/src)
 SET(SOURCE1 ${SRC}/sGPU.cpp ${SRC}/miscsFuncs.cpp ${SRC}/SpMt.cpp)
+SET(SOURCE2 ${SRC}/mGPU_MPI.cpp ${SRC}/miscsFuncs.cpp ${SRC}/SpMt.cpp)
 
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} 
+                    ${AMGX_INCLUDE_DIRS}
                     ${CUDA_INCLUDE_DIRS}
-                    ${AMGX_INCLUDE_DIRS})
+                    ${MPI_CXX_INCLUDE_PATH})
 
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS}
                  ${CUDA_LIBRARY_DIRS}
@@ -165,7 +187,14 @@ LINK_DIRECTORIES(${Boost_LIBRARY_DIRS}
 
 
 ADD_EXECUTABLE(sGPU ${SOURCE1})
+ADD_EXECUTABLE(mGPU_MPI ${SOURCE2})
 
-TARGET_LINK_LIBRARIES(sGPU ${Boost_LIBRARIES}
-                           ${AMGX_LIBRARIES}
-                           ${CUDA_LIBRARIES})
+TARGET_LINK_LIBRARIES(sGPU 
+                      ${Boost_LIBRARIES}
+                      ${AMGX_LIBRARIES}
+                      ${CUDA_LIBRARIES})
+TARGET_LINK_LIBRARIES(mGPU_MPI 
+                      ${Boost_LIBRARIES}
+                      ${AMGX_LIBRARIES}
+                      ${CUDA_LIBRARIES}
+                      ${MPI_CXX_LIBRARIES})

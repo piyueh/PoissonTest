@@ -11,10 +11,12 @@
 
 # include <boost/program_options.hpp>
 # include <boost/timer/timer.hpp>
+# include <boost/mpi.hpp>
 
 # include <cuda_runtime.h>
 
 # include "SpMt.hpp"
+# include "cudaCHECK.h"
 
 
 # ifndef DMEMTYPE
@@ -27,6 +29,8 @@ typedef std::map<std::string, std::string>      paramsMap;
 
 typedef thrust::host_vector<double>             HostVec;
 typedef thrust::device_vector<double>           DeviceVec;
+typedef thrust::host_vector<int>                HostVecInt;
+typedef thrust::device_vector<int>              DeviceVecInt;
 
 typedef SpMt<HOST>                              HostSpMt;
 typedef SpMt<DEVICE>                            DeviceSpMt;
@@ -39,7 +43,7 @@ void parseCMD(int, char **, paramsMap &);
 void setMode(std::string, AMGX_Mode &);
 
 void generateA(const int &Nx, const int &Ny, 
-               const double &dx, const double &dy, HostSpMt &A);
+               const double &dx, const double &dy, HostSpMt &A, HostVec &rhs);
 
 void generateXY(const int &Nx, const int &Ny,
                 const double &Lx, const double &Ly,
@@ -60,6 +64,8 @@ int showSysInfo(const AMGX_matrix_handle &A,
 
 void checkError(const int Nx, const int Ny, 
                 const HostVec &p, const HostVec &x, const HostVec &y);
+
+int fetchMtxSize(std::string mtxFile);
 
 template<typename T>
 std::ostream & operator<<(std::ostream &os, std::vector<T> x);
