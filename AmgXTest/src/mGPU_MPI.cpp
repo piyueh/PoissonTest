@@ -72,6 +72,9 @@ int main(int argc, char **argv)
     HostVecInt                  partSize(Npart),
                                 partVec,
                                 devs;
+    int                         &Nlocal = partSize[myRank],
+                                bgIdx,
+                                edIdx;
 
 
     // definition of all data related to AmgX
@@ -143,10 +146,11 @@ int main(int argc, char **argv)
         Lx = 1.0;
         Ly = 1.0;
 
+        detPartSize(Ntol, Npart, myRank, Nlocal, bgIdx, edIdx, partVec);
         generateXY(Nx, Ny, Lx, Ly, dx, dy, x, y);
-        generateRHS(Nx, Ny, hb, x, y);
-        generateZerosVec(Ntol, hp);
-        generateA(Nx, Ny, dx, dy, hA, hb);
+        generateRHS(Nx, Ny, Nlocal, bgIdx, hb, x, y);
+        generateZerosVec(Nlocal, hp);
+        generateA(Nx, Ny, Nlocal, bgIdx, dx, dy, hA);
 
         // move original data from host to device
         if (CMDparams["type"] == "device")
@@ -155,6 +159,7 @@ int main(int argc, char **argv)
             dp = hp;
             db = hb;
         }
+        world.barrier();
     }
     
 
@@ -182,7 +187,6 @@ int main(int argc, char **argv)
 
 
     // create a resource object based on the current configuration
-    // "simple" means this is for single CPU thread and single GPU
     MPI_Comm        comm = (ompi_communicator_t *)world;
     AMGX_resources_create(&rsrc, cfg, &comm, 1, devs.data());
 
@@ -202,16 +206,17 @@ int main(int argc, char **argv)
     AMGX_solver_create(&solver, rsrc, mode, cfg);
 
 
+    int         rings;
+
+    // obtain the default rings based on the config
+    AMGX_config_get_default_number_of_rings(cfg, &rings);
+    world.barrier();
+
+    std::cout << "Default rings: " << rings << std::endl;
+
+
     if (CMDparams.count("input"))
     {
-        int         rings;
-
-        // obtain the default rings based on the config
-        AMGX_config_get_default_number_of_rings(cfg, &rings);
-        world.barrier();
-
-        std::cout << "Default rings: " << rings << std::endl;
-
         // read linear system (1 matrix, 2 vectors) from a .mtx file
         // AmgX will automatically read data distributedly
         AMGX_read_system_distributed(AmgX_A, AmgX_b, AmgX_p, 
@@ -227,7 +232,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        // pin host memory
+        // pin host memory if the data are originally located on host
         if (CMDparams["type"] == "host")
         {
             b = hb.data();
@@ -260,10 +265,13 @@ int main(int argc, char **argv)
 
         // copy data from original data to AmgX data structure
         timer.start();
+        AMGX_vector_bind(AmgX_b, AmgX_A);
+        AMGX_vector_bind(AmgX_p, AmgX_A);
+        AMGX_matrix_upload_all_global(AmgX_A, Ntol, hA.Nrows, hA.Nnz, 1, 1, 
+                               Arow, Acol, Adata, nullptr, 
+                               rings, rings, partVec.data());
         AMGX_vector_upload(AmgX_b, hA.Nrows, 1, b);
         AMGX_vector_upload(AmgX_p, hA.Nrows, 1, p);
-        AMGX_matrix_upload_all(AmgX_A, hA.Nrows, hA.Nnz, 1, 1, 
-                               Arow, Acol, Adata, nullptr);
         uploadTime = timer.format();
     }
 
@@ -287,24 +295,29 @@ int main(int argc, char **argv)
     std::cout << "Status: " << status << std::endl;
 
 
-    // write A, b, x yo an output .mtx file
-    if (CMDparams.count("output"))
-        AMGX_write_system(AmgX_A, AmgX_b, AmgX_p, CMDparams["output"].c_str());
+    // Download data from device to host
+    timer.start();
+    AMGX_vector_download(AmgX_p, p);
+    downloadTime = timer.format();
+
+    if (CMDparams["type"] == "device") hp = dp;
+
+
+    // write A, b, p to an output .mtx file
+    if (CMDparams.count("outputSys"))
+        AMGX_write_system(AmgX_A, AmgX_b, AmgX_p, CMDparams["outputSys"].c_str());
+    world.barrier();
+
+
+    // write only p to a file
+    if (CMDparams.count("outputResult"))
+    {
+        std::ofstream   file(CMDparams["outputResult"]);
+        for(auto it: hp) file << it << ", ";
+        file.close();
+    }
     
 
-    // Download data from device to host
-    if (CMDparams.count("input"))
-        std::cout << "No exact solution available for this system." << std::endl;
-    else
-    {
-        timer.start();
-        AMGX_vector_download(AmgX_p, p);
-        downloadTime = timer.format();
-
-        if (CMDparams["type"] == "device") hp = dp;
-
-        checkError(Nx, Ny, hp, x, y);
-    }
 
 
     // destroy and finalize

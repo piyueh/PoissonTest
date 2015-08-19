@@ -31,7 +31,8 @@ void parseCMD(int argc, char **argv, paramsMap & CMDparams)
         ("mode,m", value<string>()->default_value("dDDI"), "mode")
         ("configFile,c", value<string>()->required(), "Configuration file")
         ("input,i", value<string>(), "Input MatrixMarket file")
-        ("output,o", value<string>(), "Output file")
+        ("outputSys,O", value<string>(), "Output MTX file for whole system")
+        ("outputResult,o", value<string>(), "Output only result vector as txt file")
         ("Nx", value<string>()->default_value("1000"), "Nx")
         ("Ny", value<string>()->default_value("1000"), "Ny")
         ("type,t", value<string>()->default_value("host"), 
@@ -90,8 +91,11 @@ void parseCMD(int argc, char **argv, paramsMap & CMDparams)
             CMDparams["Ny"] = vm["Ny"].as<string>();
             CMDparams["type"] = vm["type"].as<string>();
 
-            if (vm.count("output")) 
-                CMDparams["output"] = vm["output"].as<string>();
+            if (vm.count("outputSys")) 
+                CMDparams["outputSys"] = vm["outputSys"].as<string>();
+
+            if (vm.count("outputResult")) 
+                CMDparams["outputResult"] = vm["outputResult"].as<string>();
 
             if (vm.count("input"))
             {
@@ -104,7 +108,9 @@ void parseCMD(int argc, char **argv, paramsMap & CMDparams)
         }
     }
     catch(const error &ex)
+    {
         std::cerr << ex.what() << std::endl;
+    }
 }
 
 
@@ -132,7 +138,8 @@ void setMode(std::string mode_, AMGX_Mode & mode)
 
 
 void generateA(const int &Nx, const int &Ny, 
-               const double &dx, const double &dy, HostSpMt &A, HostVec &rhs)
+               const int &Nlocal, const int &bgIdx,
+               const double &dx, const double &dy, HostSpMt &A)
 {
     double      cx = 1.0 / (dx * dx),
                 cy = 1.0 / (dy * dy),
@@ -140,18 +147,18 @@ void generateA(const int &Nx, const int &Ny,
 
     int         tempI = 0;
 
-    A.Nnz = 5 * Nx * Ny - 2 * Nx - 2 * Ny;
-    A.Nrows = Nx * Ny;
+    A.Nnz = 0;
+    A.Nrows = Nlocal;
     A.rowIdx.reserve(A.Nrows+1);
-    A.colIdx.reserve(A.Nnz);
-    A.data.reserve(A.Nnz);
+    A.colIdx.reserve(5 * A.Nrows);
+    A.data.reserve(5 * A.Nrows);
 
     for(int i=0; i<A.Nrows; ++i)
     {
-        int     grid_i = i % Nx,
-                grid_j = i / Nx;
+        int     grid_i = (i + bgIdx) % Nx,
+                grid_j = (i + bgIdx) / Nx;
 
-        A.rowIdx.push_back(tempI);
+        A.rowIdx.push_back(A.Nnz);
 
         if (grid_i == 0 && grid_j == 0)
         {
@@ -163,7 +170,7 @@ void generateA(const int &Nx, const int &Ny,
             A.data.push_back(cx);
             A.data.push_back(cy);
 
-            tempI += 3;
+            A.Nnz += 3;
         }
         else if (grid_i == Nx - 1 && grid_j == 0)
         {
@@ -175,7 +182,7 @@ void generateA(const int &Nx, const int &Ny,
             A.data.push_back(cd+cx+cy);
             A.data.push_back(cy);
 
-            tempI += 3;
+            A.Nnz += 3;
         }
         else if (grid_i == 0 && grid_j == Ny - 1)
         {
@@ -187,7 +194,7 @@ void generateA(const int &Nx, const int &Ny,
             A.data.push_back(cd+cx+cy);
             A.data.push_back(cx);
 
-            tempI += 3;
+            A.Nnz += 3;
         }
         else if (grid_i == Nx - 1 && grid_j == Ny - 1)
         {
@@ -199,7 +206,7 @@ void generateA(const int &Nx, const int &Ny,
             A.data.push_back(cx);
             A.data.push_back(cd+cx+cy);
 
-            tempI += 3;
+            A.Nnz += 3;
         }
         else if (grid_i == 0)
         {
@@ -213,7 +220,7 @@ void generateA(const int &Nx, const int &Ny,
             A.data.push_back(cx);
             A.data.push_back(cy);
 
-            tempI += 4;
+            A.Nnz += 4;
         }
         else if (grid_i == Nx - 1)
         {
@@ -227,7 +234,7 @@ void generateA(const int &Nx, const int &Ny,
             A.data.push_back(cd+cx);
             A.data.push_back(cy);
 
-            tempI += 4;
+            A.Nnz += 4;
         }
         else if (grid_j == 0)
         {
@@ -241,7 +248,7 @@ void generateA(const int &Nx, const int &Ny,
             A.data.push_back(cx);
             A.data.push_back(cy);
 
-            tempI += 4;
+            A.Nnz += 4;
         }
         else if (grid_j == Ny - 1)
         {
@@ -255,7 +262,7 @@ void generateA(const int &Nx, const int &Ny,
             A.data.push_back(cd+cy);
             A.data.push_back(cx);
 
-            tempI += 4;
+            A.Nnz += 4;
         }
         else
         {
@@ -271,18 +278,11 @@ void generateA(const int &Nx, const int &Ny,
             A.data.push_back(cx);
             A.data.push_back(cy);
 
-            tempI += 5;
+            A.Nnz += 5;
         }
     }
 
-
-    if (tempI == A.Nnz)
-        A.rowIdx.push_back(A.Nnz);
-    else
-    {
-        std::cerr << "Wrong in generating matrix A!!" << std::endl;
-        exit(0);
-    }
+    A.rowIdx.push_back(A.Nnz);
 }
 
 
@@ -302,24 +302,27 @@ void generateXY(const int &Nx, const int &Ny,
 
 
 void generateRHS(const int &Nx, const int &Ny, 
+                 const int &Nlocal, const int &bgIdx,
                  HostVec &b, const HostVec &x, const HostVec &y)
 {
     double      coeff1 = 2.0 * M_PI,
                 coeff2 = - 8.0 * M_PI * M_PI;
 
-    b.reserve(Nx*Ny);
-    b.resize(Nx*Ny);
+    b.reserve(Nlocal);
+    b.resize(Nlocal);
 
-    for(int i=0; i<Nx*Ny; ++i)
+    for(int i=0; i<Nlocal; ++i)
     {
-        int     grid_i = i % Nx,
-                grid_j = i / Nx;
+        int     grid_i = (i + bgIdx) % Nx,
+                grid_j = (i + bgIdx) / Nx;
 
         b[i] = coeff2 * 
                std::cos(coeff1 * x[grid_i]) * 
                std::cos(coeff1 * y[grid_j]);
     }
-    b[0] += std::cos(coeff1 * x[0]) * std::cos(coeff1 * y[0]);
+
+    if (bgIdx == 0) // the gobally first node is located in rank 0
+        b[0] += std::cos(coeff1 * x[0]) * std::cos(coeff1 * y[0]);
 }
 
 
@@ -333,17 +336,18 @@ void generateZerosVec(const int &N, HostVec &p)
 
 
 void exactSolution(const int &Nx, const int &Ny,
+                   const int &Nlocal, const int &bgIdx,
                    HostVec &p_exact, const HostVec &x, const HostVec &y)
 {
     double      coeff = 2.0 * M_PI;
 
-    p_exact.reserve(Nx*Ny);
-    p_exact.resize(Nx*Ny);
+    p_exact.reserve(Nlocal);
+    p_exact.resize(Nlocal);
 
-    for(int i=0; i<Nx*Ny; ++i)
+    for(int i=0; i<Nlocal; ++i)
     {
-        int     grid_i = i % Nx,
-                grid_j = i / Nx;
+        int     grid_i = (i + bgIdx) % Nx,
+                grid_j = (i + bgIdx) / Nx;
 
         p_exact[i] = std::cos(coeff * x[grid_i]) * 
                      std::cos(coeff * y[grid_j]);
@@ -438,20 +442,11 @@ void checkError(const int Nx, const int Ny,
     double      L2;
     HostVec     exact(p.size());
 
-    exactSolution(Nx, Ny, exact, x, y);
+    exactSolution(Nx, Ny, Nx*Ny, 0, exact, x, y);
 
     L2 = errL2Norm(p.size(), p, exact);
 
     std::cout << "Error (L2 Norm): " << L2 << std::endl;
-}
-
-
-template<typename T>
-std::ostream & operator<<(std::ostream &os, std::vector<T> x)
-{
-	for(auto i: x) os << i << " ";
-        os << std::endl;
-	return os;
 }
 
 
@@ -476,4 +471,43 @@ int fetchMtxSize(std::string mtxFile)
     }
 
     return N;
+}
+
+
+void detPartSize(const int &Ntol, const int &mpiSize, const int &myRank,
+                 int &Nlocal, int &bgIdx, int &edIdx, HostVecInt &partVec)
+{
+    int         Nbasic = Ntol / mpiSize,
+                Nremain = Ntol % mpiSize;
+
+    Nlocal = Nbasic;
+
+    if (myRank < Nremain)
+    {
+        Nlocal = Nbasic + 1;
+        bgIdx = (Nbasic + 1) * myRank;
+    }
+    else
+        bgIdx = (Nbasic + 1) * Nremain + Nbasic * (myRank - Nremain);
+
+    edIdx = bgIdx + Nlocal - 1;
+
+    if ((myRank == mpiSize-1) && (edIdx != Ntol-1))
+    {
+        std::cerr << "error in the function detPartSize!" << std::endl;
+        exit(0);
+    }
+
+    partVec.resize(Ntol);
+    for(int i=bgIdx; i<=edIdx; ++i)
+        partVec[i] = myRank;
+}
+
+
+template<typename T>
+std::ostream & operator<<(std::ostream &os, std::vector<T> x)
+{
+	for(auto i: x) os << i << " ";
+        os << std::endl;
+	return os;
 }

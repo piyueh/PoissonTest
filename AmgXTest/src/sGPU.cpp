@@ -81,9 +81,9 @@ int main(int argc, char **argv)
         Ly = 1.0;
 
         generateXY(Nx, Ny, Lx, Ly, dx, dy, x, y);
-        generateRHS(Nx, Ny, hb, x, y);
+        generateRHS(Nx, Ny, Ntol, 0, hb, x, y);
         generateZerosVec(Ntol, hp);
-        generateA(Nx, Ny, dx, dy, hA, hb);
+        generateA(Nx, Ny, Ntol, 0, dx, dy, hA);
 
         // move original data from host to device
         if (CMDparams["type"] == "device")
@@ -206,25 +206,27 @@ int main(int argc, char **argv)
     std::cout << "Status: " << status << std::endl;
 
 
-    // write A, b, x yo an output .mtx file
-    if (CMDparams.count("output"))
-        AMGX_write_system(AmgX_A, AmgX_b, AmgX_p, CMDparams["output"].c_str());
-    
-
     // Download data from device to host
-    if (CMDparams.count("input"))
-        std::cout << "No exact solution available for this system." << std::endl;
-    else
+    timer.start();
+    AMGX_vector_download(AmgX_p, p);
+    downloadTime = timer.format();
+
+    if (CMDparams["type"] == "device") hp = dp;
+
+
+    // write A, b, p to an output .mtx file
+    if (CMDparams.count("outputSys"))
+        AMGX_write_system(AmgX_A, AmgX_b, AmgX_p, CMDparams["outputSys"].c_str());
+
+
+    // write only p to a file
+    if (CMDparams.count("outputResult"))
     {
-        timer.start();
-        AMGX_vector_download(AmgX_p, p);
-        downloadTime = timer.format();
-
-        if (CMDparams["type"] == "device") hp = dp;
-
-        checkError(Nx, Ny, hp, x, y);
+        std::ofstream   file(CMDparams["outputResult"]);
+        for(auto it: hp) file << it << " ";
+        file.close();
     }
-
+    
 
     // destroy and finalize
     AMGX_solver_destroy(solver);
