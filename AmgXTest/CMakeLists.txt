@@ -192,7 +192,8 @@ ADD_EXECUTABLE(mGPU_MPI ${SOURCE2})
 TARGET_LINK_LIBRARIES(sGPU 
                       ${Boost_LIBRARIES}
                       ${AMGX_LIBRARIES}
-                      ${CUDA_LIBRARIES})
+                      ${CUDA_LIBRARIES}
+                      ${MPI_CXX_LIBRARIES})
 TARGET_LINK_LIBRARIES(mGPU_MPI 
                       ${Boost_LIBRARIES}
                       ${AMGX_LIBRARIES}
