@@ -103,7 +103,6 @@ int main(int argc, char **argv)
     devs.push_back(myRank % Ndevs);
 
 
-
     if (CMDparams.count("input"))
     {
 
@@ -147,6 +146,7 @@ int main(int argc, char **argv)
         Ly = 1.0;
 
         detPartSize(Ntol, Npart, myRank, Nlocal, bgIdx, edIdx, partVec);
+
         generateXY(Nx, Ny, Lx, Ly, dx, dy, x, y);
         generateRHS(Nx, Ny, Nlocal, bgIdx, hb, x, y);
         generateZerosVec(Nlocal, hp);
@@ -165,45 +165,58 @@ int main(int argc, char **argv)
 
     // initialize AmgX
     AMGX_SAFE_CALL(AMGX_initialize());
+    world.barrier();
+
     AMGX_SAFE_CALL(AMGX_initialize_plugins());
+    world.barrier();
 
 
     // let AmgX use a user-defined output function to print messages
     AMGX_SAFE_CALL(AMGX_register_print_callback(&print_callback));
+    world.barrier();
     // let AmgX instead of users to handle messages returned by AmgX functions
     AMGX_SAFE_CALL(AMGX_install_signal_handler());
+    world.barrier();
 
 
     // set up the mode based on the input CMD parameter
     setMode(CMDparams["Mode"], mode);
+    world.barrier();
 
 
     // create a config object using an input file
     AMGX_SAFE_CALL(AMGX_config_create_from_file(&cfg, 
                                 CMDparams["configFile"].c_str()));
+    world.barrier();
     // to let the AmgX handle errors internally, so AMGX_SAFE_CALL can be 
     // discarded after this point and before the destroy of this config object
     AMGX_SAFE_CALL(AMGX_config_add_parameters(&cfg, "exception_handling=1"));
+    world.barrier();
 
 
     // create a resource object based on the current configuration
     MPI_Comm        comm = (ompi_communicator_t *)world;
     AMGX_resources_create(&rsrc, cfg, &comm, 1, devs.data());
+    world.barrier();
 
 
     // assign memory space to the two vectors
     AMGX_vector_create(&AmgX_p, rsrc, mode);
+    world.barrier();
     AMGX_vector_create(&AmgX_b, rsrc, mode);
+    world.barrier();
 
 
     // assign memory space and an instance to the matrix variable "A"
     AMGX_matrix_create(&AmgX_A, rsrc, mode);
+    world.barrier();
 
     
     // assign memory space and an instance to the solver variable "solver"
     // Note: after the solver is created, and before it is destroyed, 
     // the content of resource and config objects can not be modified!!
     AMGX_solver_create(&solver, rsrc, mode, cfg);
+    world.barrier();
 
 
     int         rings;
@@ -219,6 +232,7 @@ int main(int argc, char **argv)
     {
         // read linear system (1 matrix, 2 vectors) from a .mtx file
         // AmgX will automatically read data distributedly
+        world.barrier();
         AMGX_read_system_distributed(AmgX_A, AmgX_b, AmgX_p, 
                                      CMDparams["input"].c_str(), rings, 
                                      Npart, partSize.data(), 
@@ -263,12 +277,15 @@ int main(int argc, char **argv)
             exit(0);
         }
 
+
+
         // copy data from original data to AmgX data structure
         timer.start();
         AMGX_vector_bind(AmgX_b, AmgX_A);
         AMGX_vector_bind(AmgX_p, AmgX_A);
+        world.barrier();
         AMGX_matrix_upload_all_global(AmgX_A, Ntol, hA.Nrows, hA.Nnz, 1, 1, 
-                               Arow, Acol, Adata, nullptr, 
+                               Arow, Acol, Adata, NULL, 
                                rings, rings, partVec.data());
         AMGX_vector_upload(AmgX_b, hA.Nrows, 1, b);
         AMGX_vector_upload(AmgX_p, hA.Nrows, 1, p);
