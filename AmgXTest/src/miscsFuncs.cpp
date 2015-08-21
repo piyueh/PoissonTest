@@ -155,16 +155,17 @@ void generateA(const int &Nx, const int &Ny,
 
     for(int i=0; i<A.Nrows; ++i)
     {
-        int     grid_i = (i + bgIdx) % Nx,
-                grid_j = (i + bgIdx) / Nx;
+        int     col = i + bgIdx;
+        int     grid_i = col % Nx,
+                grid_j = col / Nx;
 
         A.rowIdx.push_back(A.Nnz);
 
         if (grid_i == 0 && grid_j == 0)
         {
-            A.colIdx.push_back(i);
-            A.colIdx.push_back(i+1);
-            A.colIdx.push_back(i+Nx);
+            A.colIdx.push_back(col);
+            A.colIdx.push_back(col+1);
+            A.colIdx.push_back(col+Nx);
 
             A.data.push_back(cd+cx+cy+1);
             A.data.push_back(cx);
@@ -174,9 +175,9 @@ void generateA(const int &Nx, const int &Ny,
         }
         else if (grid_i == Nx - 1 && grid_j == 0)
         {
-            A.colIdx.push_back(i-1);
-            A.colIdx.push_back(i);
-            A.colIdx.push_back(i+Nx);
+            A.colIdx.push_back(col-1);
+            A.colIdx.push_back(col);
+            A.colIdx.push_back(col+Nx);
 
             A.data.push_back(cx);
             A.data.push_back(cd+cx+cy);
@@ -186,9 +187,9 @@ void generateA(const int &Nx, const int &Ny,
         }
         else if (grid_i == 0 && grid_j == Ny - 1)
         {
-            A.colIdx.push_back(i-Nx);
-            A.colIdx.push_back(i);
-            A.colIdx.push_back(i+1);
+            A.colIdx.push_back(col-Nx);
+            A.colIdx.push_back(col);
+            A.colIdx.push_back(col+1);
 
             A.data.push_back(cy);
             A.data.push_back(cd+cx+cy);
@@ -198,9 +199,9 @@ void generateA(const int &Nx, const int &Ny,
         }
         else if (grid_i == Nx - 1 && grid_j == Ny - 1)
         {
-            A.colIdx.push_back(i-Nx);
-            A.colIdx.push_back(i-1);
-            A.colIdx.push_back(i);
+            A.colIdx.push_back(col-Nx);
+            A.colIdx.push_back(col-1);
+            A.colIdx.push_back(col);
 
             A.data.push_back(cy);
             A.data.push_back(cx);
@@ -210,10 +211,10 @@ void generateA(const int &Nx, const int &Ny,
         }
         else if (grid_i == 0)
         {
-            A.colIdx.push_back(i-Nx);
-            A.colIdx.push_back(i);
-            A.colIdx.push_back(i+1);
-            A.colIdx.push_back(i+Nx);
+            A.colIdx.push_back(col-Nx);
+            A.colIdx.push_back(col);
+            A.colIdx.push_back(col+1);
+            A.colIdx.push_back(col+Nx);
 
             A.data.push_back(cy);
             A.data.push_back(cd+cx);
@@ -224,10 +225,10 @@ void generateA(const int &Nx, const int &Ny,
         }
         else if (grid_i == Nx - 1)
         {
-            A.colIdx.push_back(i-Nx);
-            A.colIdx.push_back(i-1);
-            A.colIdx.push_back(i);
-            A.colIdx.push_back(i+Nx);
+            A.colIdx.push_back(col-Nx);
+            A.colIdx.push_back(col-1);
+            A.colIdx.push_back(col);
+            A.colIdx.push_back(col+Nx);
 
             A.data.push_back(cy);
             A.data.push_back(cx);
@@ -238,10 +239,10 @@ void generateA(const int &Nx, const int &Ny,
         }
         else if (grid_j == 0)
         {
-            A.colIdx.push_back(i-1);
-            A.colIdx.push_back(i);
-            A.colIdx.push_back(i+1);
-            A.colIdx.push_back(i+Nx);
+            A.colIdx.push_back(col-1);
+            A.colIdx.push_back(col);
+            A.colIdx.push_back(col+1);
+            A.colIdx.push_back(col+Nx);
 
             A.data.push_back(cx);
             A.data.push_back(cd+cy);
@@ -252,10 +253,10 @@ void generateA(const int &Nx, const int &Ny,
         }
         else if (grid_j == Ny - 1)
         {
-            A.colIdx.push_back(i-Nx);
-            A.colIdx.push_back(i-1);
-            A.colIdx.push_back(i);
-            A.colIdx.push_back(i+1);
+            A.colIdx.push_back(col-Nx);
+            A.colIdx.push_back(col-1);
+            A.colIdx.push_back(col);
+            A.colIdx.push_back(col+1);
 
             A.data.push_back(cy);
             A.data.push_back(cx);
@@ -266,11 +267,11 @@ void generateA(const int &Nx, const int &Ny,
         }
         else
         {
-            A.colIdx.push_back(i-Nx);
-            A.colIdx.push_back(i-1);
-            A.colIdx.push_back(i);
-            A.colIdx.push_back(i+1);
-            A.colIdx.push_back(i+Nx);
+            A.colIdx.push_back(col-Nx);
+            A.colIdx.push_back(col-1);
+            A.colIdx.push_back(col);
+            A.colIdx.push_back(col+1);
+            A.colIdx.push_back(col+Nx);
 
             A.data.push_back(cy);
             A.data.push_back(cx);
@@ -499,8 +500,23 @@ void detPartSize(const int &Ntol, const int &mpiSize, const int &myRank,
     }
 
     partVec.resize(Ntol);
-    for(int i=bgIdx; i<=edIdx; ++i)
-        partVec[i] = myRank;
+
+    int     bg = 0, ed = 0;
+    for(int rank=0; rank<mpiSize; ++rank)
+    {
+        if (rank < Nremain)
+        {
+            bg = (Nbasic + 1) * rank;
+            ed = bg + Nbasic + 1 - 1;
+        }
+        else
+        {
+            bg = (Nbasic + 1) * Nremain + Nbasic * (rank - Nremain);
+            ed = bg + Nbasic - 1;
+        }
+
+        for(int i=bg; i<=ed; ++i) partVec[i] = rank;
+    }
 }
 
 
