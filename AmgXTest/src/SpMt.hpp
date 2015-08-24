@@ -1,5 +1,6 @@
 # pragma once
 
+# include "cudaCHECK.h"
 # include <cuda_runtime.h>
 # include <thrust/host_vector.h>
 # include <thrust/device_vector.h>
@@ -19,34 +20,35 @@ class SpMt_Base
 };
 
 
-template<memType T>
+template<memType M, typename T>
 class SpMt{};
 
 
-template<>
-class SpMt<HOST>: public SpMt_Base
+template<typename T>
+class SpMt<HOST, T>: public SpMt_Base
 {
     public:
-        thrust::host_vector<int>        rowIdx,
-                                        colIdx;
+        thrust::host_vector<int>        rowIdx;
+        thrust::host_vector<T>          colIdx;
         thrust::host_vector<double>     data;
 
         SpMt() = default;
-        SpMt & operator=(const SpMt<HOST> &rhs);
-        SpMt & operator=(const SpMt<DEVICE> &rhs);
+        SpMt & operator=(const SpMt<HOST, T> &rhs);
+        SpMt & operator=(const SpMt<DEVICE, T> &rhs);
 };
 
 
-template<>
-class SpMt<DEVICE>: public SpMt_Base
+template<typename T>
+class SpMt<DEVICE, T>: public SpMt_Base
 {
     public:
 
-        thrust::device_vector<int>      rowIdx,
-                                        colIdx;
+        thrust::device_vector<int>      rowIdx;
+        thrust::device_vector<T>        colIdx;
         thrust::device_vector<double>   data;
 
         SpMt() = default;
-        SpMt & operator=(const SpMt<HOST> &rhs);
-        SpMt & operator=(const SpMt<DEVICE> &rhs);
+        SpMt & operator=(const SpMt<HOST, T> &rhs);
+        SpMt & operator=(const SpMt<DEVICE, T> &rhs);
 };
+

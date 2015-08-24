@@ -3,7 +3,8 @@
 # include <cuda.h>
 
 
-SpMt<HOST> & SpMt<HOST>::operator=(const SpMt<HOST> &rhs)
+template<>
+SpMt<HOST, int> & SpMt<HOST, int>::operator=(const SpMt<HOST, int> &rhs)
 {
     Nrows = rhs.Nrows;
     Nnz = rhs.Nnz;
@@ -16,7 +17,8 @@ SpMt<HOST> & SpMt<HOST>::operator=(const SpMt<HOST> &rhs)
 }
 
 
-SpMt<HOST> & SpMt<HOST>::operator=(const SpMt<DEVICE> &rhs)
+template<>
+SpMt<HOST, int> & SpMt<HOST, int>::operator=(const SpMt<DEVICE, int> &rhs)
 {
     Nrows = rhs.Nrows;
     Nnz = rhs.Nnz;
@@ -29,7 +31,8 @@ SpMt<HOST> & SpMt<HOST>::operator=(const SpMt<DEVICE> &rhs)
 }
 
 
-SpMt<DEVICE> & SpMt<DEVICE>::operator=(const SpMt<HOST> &rhs)
+template<>
+SpMt<HOST, long> & SpMt<HOST, long>::operator=(const SpMt<HOST, long> &rhs)
 {
     Nrows = rhs.Nrows;
     Nnz = rhs.Nnz;
@@ -42,7 +45,64 @@ SpMt<DEVICE> & SpMt<DEVICE>::operator=(const SpMt<HOST> &rhs)
 }
 
 
-SpMt<DEVICE> & SpMt<DEVICE>::operator=(const SpMt<DEVICE> &rhs)
+template<>
+SpMt<HOST, long> & SpMt<HOST, long>::operator=(const SpMt<DEVICE, long> &rhs)
+{
+    Nrows = rhs.Nrows;
+    Nnz = rhs.Nnz;
+
+    rowIdx     = rhs.rowIdx;
+    colIdx     = rhs.colIdx;
+    data       = rhs.data;
+
+    return *this;
+}
+
+
+template<>
+SpMt<DEVICE, int> & SpMt<DEVICE, int>::operator=(const SpMt<HOST, int> &rhs)
+{
+    Nrows = rhs.Nrows;
+    Nnz = rhs.Nnz;
+
+    rowIdx     = rhs.rowIdx;
+    colIdx     = rhs.colIdx;
+    data       = rhs.data;
+
+    return *this;
+}
+
+
+template<>
+SpMt<DEVICE, int> & SpMt<DEVICE, int>::operator=(const SpMt<DEVICE, int> &rhs)
+{
+    Nrows = rhs.Nrows;
+    Nnz = rhs.Nnz;
+
+    rowIdx     = rhs.rowIdx;
+    colIdx     = rhs.colIdx;
+    data       = rhs.data;
+
+    return *this;
+}
+
+
+template<>
+SpMt<DEVICE, long> & SpMt<DEVICE, long>::operator=(const SpMt<HOST, long> &rhs)
+{
+    Nrows = rhs.Nrows;
+    Nnz = rhs.Nnz;
+
+    rowIdx     = rhs.rowIdx;
+    colIdx     = rhs.colIdx;
+    data       = rhs.data;
+
+    return *this;
+}
+
+
+template<>
+SpMt<DEVICE, long> & SpMt<DEVICE, long>::operator=(const SpMt<DEVICE, long> &rhs)
 {
     Nrows = rhs.Nrows;
     Nnz = rhs.Nnz;

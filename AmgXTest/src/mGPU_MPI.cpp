@@ -1,4 +1,5 @@
 # include "headers.hpp"
+# include "funcDef.hpp"
 
 
 int main(int argc, char **argv)
@@ -14,8 +15,7 @@ int main(int argc, char **argv)
 
     // create a black hole that will be use by the output of other ranks
     std::basic_ostream<char>    blackHole(nullptr);
-    std::ostream                &out = 
-        (world.rank() == 0) ? std::cout : blackHole;
+    std::ostream                &out = (world.rank() == 0) ? std::cout : blackHole;
 
 
 
@@ -28,10 +28,9 @@ int main(int argc, char **argv)
     // print out the user-input parameters
     std::cout << "Input parameters: " << std::endl;
     if (CMDparams.count("input"))
-        std::cout << "\t" << "input: " << CMDparams["input"] << std::endl;
+        out << "\t" << "input: " << CMDparams["input"] << std::endl;
     else
-        for(auto it: CMDparams)
-            std::cout << "\t" << it.first << ": " << it.second << std::endl;
+        for(auto it: CMDparams) out << "\t" << it.first << ": " << it.second << std::endl;
 
 
 
@@ -49,10 +48,10 @@ int main(int argc, char **argv)
     // containers
     HostVec                     x,
                                 y;
-    HostSpMt                    hA;
+    HostSpMtLong                hA;
     HostVec                     hp,
                                 hb;
-    DeviceSpMt                  dA;
+    DeviceSpMtLong              dA;
     DeviceVec                   dp,
                                 db;
 
@@ -60,8 +59,8 @@ int main(int argc, char **argv)
     double                      *b,
                                 *p,
                                 *Adata;
-    int                         *Arow,
-                                *Acol;
+    int                         *Arow;
+    long                        *Acol;
 
 
     // variables for distributed system
@@ -172,8 +171,12 @@ int main(int argc, char **argv)
 
 
     // let AmgX use a user-defined output function to print messages
-    AMGX_SAFE_CALL(AMGX_register_print_callback(&print_callback));
+    if (myRank == 0) 
+    { AMGX_SAFE_CALL(AMGX_register_print_callback(&print_callback)); }
+    else 
+    { AMGX_SAFE_CALL(AMGX_register_print_callback(&print_none)); }
     world.barrier();
+
     // let AmgX instead of users to handle messages returned by AmgX functions
     AMGX_SAFE_CALL(AMGX_install_signal_handler());
     world.barrier();
@@ -185,9 +188,9 @@ int main(int argc, char **argv)
 
 
     // create a config object using an input file
-    AMGX_SAFE_CALL(AMGX_config_create_from_file(&cfg, 
-                                CMDparams["configFile"].c_str()));
+    AMGX_SAFE_CALL(AMGX_config_create_from_file(&cfg, CMDparams["configFile"].c_str()));
     world.barrier();
+
     // to let the AmgX handle errors internally, so AMGX_SAFE_CALL can be 
     // discarded after this point and before the destroy of this config object
     AMGX_SAFE_CALL(AMGX_config_add_parameters(&cfg, "exception_handling=1"));
@@ -225,7 +228,7 @@ int main(int argc, char **argv)
     AMGX_config_get_default_number_of_rings(cfg, &rings);
     world.barrier();
 
-    std::cout << "Default rings: " << rings << std::endl;
+    out << "Default rings: " << rings << std::endl;
 
 
     if (CMDparams.count("input"))
@@ -258,7 +261,7 @@ int main(int argc, char **argv)
             AMGX_pin_memory(b, sizeof(double)*hb.size());
             AMGX_pin_memory(p, sizeof(double)*hp.size());
             AMGX_pin_memory(Arow, sizeof(int)*hA.rowIdx.size());
-            AMGX_pin_memory(Acol, sizeof(int)*hA.colIdx.size());
+            AMGX_pin_memory(Acol, sizeof(long)*hA.colIdx.size());
             AMGX_pin_memory(Adata, sizeof(double)*hA.data.size());
         }
         else if (CMDparams["type"] == "device")
@@ -278,16 +281,23 @@ int main(int argc, char **argv)
         }
 
 
-
-        // copy data from original data to AmgX data structure
-        timer.start();
-        AMGX_vector_bind(AmgX_b, AmgX_A);
-        AMGX_vector_bind(AmgX_p, AmgX_A);
         world.barrier();
         AMGX_matrix_upload_all_global(AmgX_A, Ntol, hA.Nrows, hA.Nnz, 1, 1, 
                                Arow, Acol, Adata, NULL, 
                                rings, rings, partVec.data());
+
+        // copy data from original data to AmgX data structure
+        timer.start();
+        world.barrier();
+        AMGX_vector_bind(AmgX_b, AmgX_A);
+
+        world.barrier();
+        AMGX_vector_bind(AmgX_p, AmgX_A);
+
+        world.barrier();
         AMGX_vector_upload(AmgX_b, hA.Nrows, 1, b);
+
+        world.barrier();
         AMGX_vector_upload(AmgX_p, hA.Nrows, 1, p);
         uploadTime = timer.format();
     }
@@ -309,7 +319,7 @@ int main(int argc, char **argv)
 
     // get the status of the solver
     AMGX_solver_get_status(solver, &status);
-    std::cout << "Status: " << status << std::endl;
+    out << "Status: " << status << std::endl;
 
 
     // Download data from device to host
@@ -318,6 +328,7 @@ int main(int argc, char **argv)
     downloadTime = timer.format();
 
     if (CMDparams["type"] == "device") hp = dp;
+    world.barrier();
 
 
     // write A, b, p to an output .mtx file
@@ -329,13 +340,20 @@ int main(int argc, char **argv)
     // write only p to a file
     if (CMDparams.count("outputResult"))
     {
-        std::ofstream   file(CMDparams["outputResult"]);
-        for(auto it: hp) file << it << ", ";
-        file.close();
+        std::ofstream   file;
+        for(int rank=0; rank<Npart; ++rank)
+        {
+            if (myRank == rank)
+            {
+                file.open(CMDparams["outputResult"], 
+                        (myRank==0) ? std::ofstream::out : std::ofstream::app);
+                for(auto it: hp) file << it << " ";
+            }
+            file.close();
+            world.barrier();
+        }
     }
     
-
-
 
     // destroy and finalize
     AMGX_solver_destroy(solver);
@@ -348,15 +366,15 @@ int main(int argc, char **argv)
     AMGX_SAFE_CALL(AMGX_finalize());
 
 
-    std::cout << std::endl;
-    std::cout << "Upload time: " << std::endl;
-    std::cout << "\t" << uploadTime << std::endl;
-    std::cout << "Setup time: " << std::endl;
-    std::cout << "\t" << setupTime << std::endl;
-    std::cout << "Solve time: " << std::endl;
-    std::cout << "\t" << solveTime << std::endl;
-    std::cout << "Download time: " << std::endl;
-    std::cout << "\t" << downloadTime << std::endl;
+    out << std::endl;
+    out << "Upload time: " << std::endl;
+    out << "\t" << uploadTime << std::endl;
+    out << "Setup time: " << std::endl;
+    out << "\t" << setupTime << std::endl;
+    out << "Solve time: " << std::endl;
+    out << "\t" << solveTime << std::endl;
+    out << "Download time: " << std::endl;
+    out << "\t" << downloadTime << std::endl;
 
     return 0;
 }

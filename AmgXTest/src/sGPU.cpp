@@ -1,4 +1,5 @@
 # include "headers.hpp"
+# include "funcDef.hpp"
 
 
 int main(int argc, char **argv)
@@ -36,10 +37,10 @@ int main(int argc, char **argv)
     // containers
     HostVec                     x,
                                 y;
-    HostSpMt                    hA;
+    HostSpMtInt                 hA;
     HostVec                     hp,
                                 hb;
-    DeviceSpMt                  dA;
+    DeviceSpMtInt               dA;
     DeviceVec                   dp,
                                 db;
 
