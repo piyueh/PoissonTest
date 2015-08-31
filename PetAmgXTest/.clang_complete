@@ -1,0 +1,3 @@
+-I/opt/PETSc/include
+-I/opt/cuda65/include
+-I/opt/AmgX/include
