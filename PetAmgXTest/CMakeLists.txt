@@ -207,7 +207,7 @@ SET(SOURCE
     ${SRC}/generateGrid.cpp
     ${SRC}/generateRHS.cpp
     ${SRC}/generateExt.cpp
-    ${SRC}/getPartVec.cpp)
+    ${SRC}/class_AmgXSolver.cpp)
 
 INCLUDE_DIRECTORIES(
     ${Boost_INCLUDE_DIRS} 

@@ -1,4 +1,5 @@
 # include "headers.hpp"
+# include "class_AmgXSolver.hpp"
 
 
 static std::string help = "Test PETSc plus AmgX.";
@@ -16,8 +17,7 @@ int main(int argc, char **argv)
                         y,      // y-coordinates
                         p,      // unknowns
                         b,      // RHS
-                        u,      // exact solution
-                        partVec;// partition vector
+                        u;      // exact solution
 
     Mat                 A;      // coefficient matrix
 
@@ -30,19 +30,15 @@ int main(int argc, char **argv)
 # endif
 
     int                 size, myRank; // MPI size and current rank
-    int                 Ndevs, *dev=nullptr;  // # of cuda devices and 
                                       // devices used by current process
+
+    AmgXSolver          solver1, solver2;
 
     // initialize PETSc and MPI
     ierr = PetscInitialize(&argc, &argv, nullptr, help.c_str());  CHKERRQ(ierr);
 
     ierr = MPI_Comm_size(PETSC_COMM_WORLD, &size);                CHKERRQ(ierr);
     ierr = MPI_Comm_rank(PETSC_COMM_WORLD, &myRank);              CHKERRQ(ierr);
-
-
-    // assign CUDA devices to current process
-    CHECK(cudaGetDeviceCount(&Ndevs));
-    dev = new int(myRank % Ndevs);
 
 
     // get m and n from command-line argument
@@ -101,81 +97,25 @@ int main(int argc, char **argv)
     generateA(Nx, Ny, dx, dy, A);
     ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
 
+    char *mode = "dDDI",
+         *file = "configFiles/configMPI.amgx";
 
-    // generate partition vector for AmgX
-    getPartVec(p, partVec, myRank);
+    solver1.initialize(PETSC_COMM_WORLD, size, myRank, mode, file);
+    //solver2.initialize(PETSC_COMM_WORLD, size, myRank, mode, file);
+
     ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
+    solver1.setA(A);
+    //ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
+    //solver2.setA(A);
 
-
-    // obtain raw data of local matrix
-    PetscInt        n;
-    const PetscInt  *row, *col;
-    PetscScalar     *data;
-    PetscBool       dn;
-    Mat         localA;
-    ierr = MatMPIAIJGetLocalMat(A, MAT_INITIAL_MATRIX, &localA);  CHKERRQ(ierr);
-
-    ierr = MatGetRowIJ(localA, 0, PETSC_FALSE, PETSC_FALSE, 
-            &n, &row, &col, &dn);                                 CHKERRQ(ierr);
-    ierr = MatSeqAIJGetArray(localA, &data);                      CHKERRQ(ierr);
-
-    if (dn == PETSC_TRUE)
-    {
-        for(int rank=0; rank<size; ++rank)
-        {
-            if (myRank == rank)
-            {
-                std::cout << "Rank: " << myRank << std::endl;
-                for(int i=0; i<n+1; ++i) 
-                    std::cout << row[i] << " "; std::cout << std::endl;
-                for(int i=0; i<row[n]; ++i) 
-                    std::cout << col[i] << " "; std::cout << std::endl;
-                for(int i=0; i<row[n]; ++i) 
-                    std::cout << data[i] << " "; std::cout << std::endl;
-            }
-            ierr = MPI_Barrier(PETSC_COMM_WORLD);                 CHKERRQ(ierr);
-        }
-    }
-    else
-        std::cout << "MatGetRowIJ did not work!" << std::endl;
-    ierr = MatRestoreRowIJ(localA, 0, PETSC_FALSE, PETSC_FALSE, 
-            &n, &row, &col, &dn);                                 CHKERRQ(ierr);
-    ierr = MatSeqAIJRestoreArray(localA, &data);                  CHKERRQ(ierr);
-
-
-
-
-
-    PetscViewer     viewer;
-    ierr = PetscViewerCreate(PETSC_COMM_WORLD, &viewer);          CHKERRQ(ierr);
-    ierr = PetscViewerSetType(viewer, PETSCVIEWERASCII);          CHKERRQ(ierr);
-    ierr = PetscViewerSetFormat(viewer, 
-            PETSC_VIEWER_ASCII_MATRIXMARKET);                     CHKERRQ(ierr);
-
-    ierr = VecView(b, PETSC_VIEWER_STDOUT_WORLD);                 CHKERRQ(ierr);
-    ierr = VecView(u, PETSC_VIEWER_STDOUT_WORLD);                 CHKERRQ(ierr);
-    ierr = MatView(A, PETSC_VIEWER_STDOUT_WORLD);                 CHKERRQ(ierr);
-    ierr = VecView(partVec, PETSC_VIEWER_STDOUT_WORLD);           CHKERRQ(ierr);
-
-
-
-    if (myRank == 0) std::cout << "Local Matrix: " << std::endl;
     ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
-    
-
-
-    for(int rank=0; rank<size; ++rank)
-    {
-        if (myRank == rank)
-            ierr = MatView(localA, PETSC_VIEWER_STDERR_SELF);     CHKERRQ(ierr);
-        ierr = MPI_Barrier(PETSC_COMM_WORLD);                     CHKERRQ(ierr);
-    }
+    solver1.solve(p, b);
 
 
 
+    solver1.finalize();
+    //solver2.finalize();
 
-
-    delete dev;
     ierr = PetscFinalize();                                       CHKERRQ(ierr);
 
     return 0;

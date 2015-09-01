@@ -1,5 +1,5 @@
 # include "headers.hpp"
-# include "checkCUDA.hpp"
+# include "cudaCHECK.hpp"
 # include <amgx_c.h>
 # include <cuda_runtime.h>
 
@@ -7,47 +7,48 @@ class AmgXSolver
 {
     public:
 
-        AmgXSolver();
+        AmgXSolver() = default;
 
-        ~AmgXSolver();
+        int initialize(MPI_Comm comm, int _Npart, int _myRank,
+                const std::string &_mode, const std::string &cfg_file);
 
-        int initialize(const std::string &_mode, 
-                const std::string &cfg_file, MPI_Comm comm);
+        int finalize();
 
+        int setA(Mat &A);
+        int solve(Vec &p, Vec &b);
 
 
     private:
 
-        static bool             count;      // only one instance allowed
+        static int              count;      // only one instance allowed
 
         bool                    isInitialized = false,  // as its name
                                 isUploaded_A = false,   // as its name
                                 isUploaded_P = false,   // as its name
                                 isUploaded_B = false;   // as its name
 
-        AMGX_Mode               mode;       // AmgX mode
-        AMGX_config_handle      cfg;        // AmgX config object
-        AMGX_resources_handle   rsrc;       // AmgX resource object
-        AMGX_matrix_handle      amgxA;      // AmgX coeff mat
-        AMGX_vector_handle      amgxP,      // AmgX unknowns vec
-                                amgxRHS;    // AmgX RHS vec
-        AMGX_solver_handle      solver;     // AmgX solver object
+        int                     Ndevs,      // # of cuda devices
+                                Npart,      // # of partitions
+                                myRank,     // rank of current process
+                                ring;       // a parameter used by AmgX
 
-        struct
-        {
-            int         Nrows,      // # of rows in this process
-                        Nnz;        // # on non-zero entries
-            int        *row;        // row indicies
-            long       *col;        // col indicies
-            double     *data;       // entries
-        }                       RawMat;     // containing raw data of matrix
-        
-        int                     Ndevs;      // # of cuda devices
         int                    *devs = nullptr;     // list of devices used by
                                                     // current process
 
-        int                     Npart,      // # of partitions
-                                myRank;
-        int                    *partVec = nullptr;  // list of partition
+
         MPI_Comm                AmgXComm;   // communicator
+        AMGX_Mode               mode;       // AmgX mode
+        AMGX_config_handle      cfg;        // AmgX config object
+        AMGX_resources_handle   rsrc;       // AmgX resource object
+        AMGX_matrix_handle      AmgXA;      // AmgX coeff mat
+        AMGX_vector_handle      AmgXP,      // AmgX unknowns vec
+                                AmgXRHS;    // AmgX RHS vec
+        AMGX_solver_handle      solver;     // AmgX solver object
+
+
+        int setMode(const std::string &_mode);
+        int getPartVec(const Mat &A, int *& partVec);
+        static void print_callback(const char *msg, int length);
+        static void print_none(const char *msg, int length);
+
 };
