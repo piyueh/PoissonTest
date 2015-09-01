@@ -182,11 +182,6 @@ int main(int argc, char **argv)
     world.barrier();
 
 
-    // set up the mode based on the input CMD parameter
-    setMode(CMDparams["Mode"], mode);
-    world.barrier();
-
-
     // create a config object using an input file
     AMGX_SAFE_CALL(AMGX_config_create_from_file(&cfg, CMDparams["configFile"].c_str()));
     world.barrier();
@@ -200,6 +195,11 @@ int main(int argc, char **argv)
     // create a resource object based on the current configuration
     MPI_Comm        comm = (ompi_communicator_t *)world;
     AMGX_resources_create(&rsrc, cfg, &comm, 1, devs.data());
+    world.barrier();
+
+
+    // set up the mode based on the input CMD parameter
+    setMode(CMDparams["Mode"], mode);
     world.barrier();
 
 
