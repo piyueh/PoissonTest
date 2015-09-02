@@ -101,20 +101,22 @@ int main(int argc, char **argv)
          *file = "configFiles/configMPI.amgx";
 
     solver1.initialize(PETSC_COMM_WORLD, size, myRank, mode, file);
-    //solver2.initialize(PETSC_COMM_WORLD, size, myRank, mode, file);
+    solver2.initialize(PETSC_COMM_WORLD, size, myRank, mode, file);
 
     ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
     solver1.setA(A);
-    //ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
-    //solver2.setA(A);
+    ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
+    solver2.setA(A);
 
     ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
     solver1.solve(p, b);
+    ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
+    solver2.solve(p, b);
 
 
 
     solver1.finalize();
-    //solver2.finalize();
+    solver2.finalize();
 
     ierr = PetscFinalize();                                       CHKERRQ(ierr);
 

@@ -1,44 +1,49 @@
+/**
+ * @file class_AmgXSolver.cpp
+ * @brief Definition of member functions of the class AmgXSolver
+ * @author Pi-Yueh Chuang
+ * @version alpha
+ * @date 2015-09-01
+ */
+# include <cuda_runtime.h>
 # include "class_AmgXSolver.hpp"
+# include "cudaCHECK.hpp"
 
 
+/**
+ * @brief Initialization of the static member -- count
+ *
+ * count is used to count the number of instances. The fisrt instance is 
+ * responsable for initializing AmgX library and the resource instance.
+ */
 int AmgXSolver::count = 0;
 
 
-int AmgXSolver::finalize()
-{
-
-    std::cout << 1 << std::endl;
-    AMGX_solver_destroy(solver);
-    std::cout << 2 << std::endl;
-    AMGX_matrix_destroy(AmgXA);
-    std::cout << 3 << std::endl;
-    AMGX_vector_destroy(AmgXP);
-    std::cout << 4 << std::endl;
-    AMGX_vector_destroy(AmgXRHS);
-    std::cout << 5 << std::endl;
-    AMGX_resources_destroy(rsrc);
-    std::cout << 6 << std::endl;
-    AMGX_SAFE_CALL(AMGX_config_destroy(cfg));
-
-    isInitialized = false;
-    isUploaded_A = false;
-
-    delete [] devs;
-
-    if (count == 1)
-    {
-        std::cout << 7 << std::endl;
-        AMGX_SAFE_CALL(AMGX_finalize_plugins());
-        std::cout << 8 << std::endl;
-        AMGX_SAFE_CALL(AMGX_finalize());
-    }
-
-    count -= 1;
-
-    return 0;
-}
+/**
+ * @brief Initialization of the static member -- rsrc
+ *
+ * Due to the design of AmgX library, using more than one resource instance may
+ * cause some problems. So make the resource instance as a static member to keep
+ * only one instance there.
+ */
+AMGX_resources_handle AmgXSolver::rsrc = nullptr;
 
 
+/**
+ * @brief Initialization of AmgXSolver instance
+ *
+ * This function initializes the current instance. Based on the count, only the 
+ * instance initialized first is in charge of initializing AmgX and the 
+ * resource instance.
+ *
+ * @param comm MPI communicator
+ * @param _Npart The number of processes involved in this solver
+ * @param _myRank The rank of current process
+ * @param _mode The mode this solver will run in. Please refer to AmgX manual.
+ * @param cfg_file A file containing the configurations of this solver
+ *
+ * @return Currently meaningless. May be error codes in the future.
+ */
 int AmgXSolver::initialize(MPI_Comm comm, int _Npart, int _myRank,
         const std::string &_mode, const std::string &cfg_file)
 {
@@ -48,9 +53,13 @@ int AmgXSolver::initialize(MPI_Comm comm, int _Npart, int _myRank,
     Npart = _Npart;
     myRank = _myRank;
 
+    // get the number of total cuda devices
     CHECK(cudaGetDeviceCount(&Ndevs));
+
+    // use Robin-type (?) to assign devices to processes
     devs = new int(myRank % Ndevs);
 
+    // only the first instance is in charge of initializing AmgX
     if (count == 1)
     {
         // initialize AmgX
@@ -59,16 +68,17 @@ int AmgXSolver::initialize(MPI_Comm comm, int _Npart, int _myRank,
         // intialize AmgX plugings
         AMGX_SAFE_CALL(AMGX_initialize_plugins());
 
-        // use user defined output mechanism
+        // use user defined output mechanism. only the master process can output
+        // something on the screen
         if (myRank == 0) 
         { 
             AMGX_SAFE_CALL(
-                    AMGX_register_print_callback(&(AmgXSolver::print_callback))); 
+                AMGX_register_print_callback(&(AmgXSolver::print_callback))); 
         }
         else 
         { 
             AMGX_SAFE_CALL(
-                    AMGX_register_print_callback(&(AmgXSolver::print_none))); 
+                AMGX_register_print_callback(&(AmgXSolver::print_none))); 
         }
 
         // let AmgX to handle errors returned
@@ -81,8 +91,8 @@ int AmgXSolver::initialize(MPI_Comm comm, int _Npart, int _myRank,
     // let AmgX handle returned error codes internally
     AMGX_SAFE_CALL(AMGX_config_add_parameters(&cfg, "exception_handling=1"));
 
-    // create an AmgX resource object
-    AMGX_resources_create(&rsrc, cfg, &AmgXComm, 1, devs);
+    // create an AmgX resource object, only the first instance is in charge
+    if (count == 1) AMGX_resources_create(&rsrc, cfg, &AmgXComm, 1, devs);
 
     // set mode
     setMode(_mode);
@@ -106,6 +116,71 @@ int AmgXSolver::initialize(MPI_Comm comm, int _Npart, int _myRank,
 }
 
 
+/**
+ * @brief Finalizing the instance.
+ *
+ * This function destroys AmgX data. The instance last destroyed also needs to 
+ * destroy shared resource instance and finalizing AmgX.
+ *
+ * @return Currently meaningless. May be error codes in the future.
+ */
+int AmgXSolver::finalize()
+{
+
+    // destroy solver instance
+    AMGX_solver_destroy(solver);
+
+    // destroy matrix instance
+    AMGX_matrix_destroy(AmgXA);
+
+    // destroy RHS and unknown vectors
+    AMGX_vector_destroy(AmgXP);
+    AMGX_vector_destroy(AmgXRHS);
+
+    // only the last instance need to destroy resource and finalizing AmgX
+    if (count == 1)
+    {
+        AMGX_resources_destroy(rsrc);
+        AMGX_SAFE_CALL(AMGX_config_destroy(cfg));
+
+        AMGX_SAFE_CALL(AMGX_finalize_plugins());
+        AMGX_SAFE_CALL(AMGX_finalize());
+    }
+    else
+    {
+        AMGX_config_destroy(cfg);
+    }
+
+    // change status
+    isInitialized = false;
+    isUploaded_A = false;
+
+    // deallocate device list
+    delete [] devs;
+
+    count -= 1;
+
+    return 0;
+}
+
+
+/**
+ * @brief A function convert PETSc Mat into AmgX matrix and bind it to solver
+ *
+ * This function will first extract the raw data from PETSc Mat and convert the
+ * column index into 64bit integers. It also create a partition vector that is 
+ * required by AmgX. Then, it upload the raw data to AmgX. Finally, it binds
+ * the AmgX matrix to the AmgX solver.
+ *
+ * Be cautious! It lacks mechanism to check whether the PETSc Mat is AIJ format
+ * and whether the PETSc Mat is using the same MPI communicator as the 
+ * AmgXSolver instance.
+ *
+ * @param A A PETSc Mat. The coefficient matrix of a system of linear equations.
+ * The matrix must be AIJ format and using the same MPI communicator as AmgX.
+ *
+ * @return Currently meaningless. May be error codes in the future.
+ */
 int AmgXSolver::setA(Mat &A)
 {
     PetscInt        nLclRows,
@@ -181,6 +256,21 @@ int AmgXSolver::setA(Mat &A)
 }
 
 
+/**
+ * @brief Solve the linear problem based on given RHS and initial guess
+ *
+ * This function solve the linear problem. Users need to set matrix A before
+ * calling this function. The result will be saved back to the PETSc Vec 
+ * containing initial guess.
+ *
+ * It lacks mechanisms to check whether necessary initialization and setting
+ * matrix A are done first.
+ *
+ * @param p Unknowns vector. The values passed in will be an initial guess.
+ * @param b Right-hand-side vector.
+ *
+ * @return Currently meaningless. May be error codes in the future.
+ */
 int AmgXSolver::solve(Vec &p, Vec &b)
 {
     PetscErrorCode      ierr;
@@ -222,6 +312,17 @@ int AmgXSolver::solve(Vec &p, Vec &b)
     return 0;
 }
 
+
+/**
+ * @brief Setting up AmgX mode.
+ *
+ * Convert a STL string to AmgX mode and then store this mode. For the usage of 
+ * AmgX modes, please refer to AmgX manual.
+ *
+ * @param _mode A STL string describing the mode.
+ *
+ * @return Currently meaningless. May be error codes in the future.
+ */
 int AmgXSolver::setMode(const std::string &_mode)
 {
     if (_mode == "hDDI")
@@ -246,6 +347,21 @@ int AmgXSolver::setMode(const std::string &_mode)
 }
 
 
+/**
+ * @brief Obtaining a partition vector required by AmgX.
+ *
+ * This function generate a vector describing which processor an entry of the 
+ * solution vector is located on. So the size of this partition vector will be 
+ * the same as the number of unknowns.
+ *
+ * This function is currently very naive. The code is simple, but the efficiency
+ * is not very good.
+ *
+ * @param A A PETSc Mat. The coefficient matrix.
+ * @param partVec A raw pointer pointing to int.
+ *
+ * @return Currently meaningless. May be error codes in the future.
+ */
 int AmgXSolver::getPartVec(const Mat &A, int *& partVec)
 {
     PetscErrorCode      ierr;
@@ -289,17 +405,29 @@ int AmgXSolver::getPartVec(const Mat &A, int *& partVec)
 
     ierr = VecRestoreArray(tempSEQ, &tempPartVec);                CHKERRQ(ierr);
 
-    ierr = VecDestroy(&tempSEQ);                                   CHKERRQ(ierr);
-    ierr = VecDestroy(&tempMPI);                                   CHKERRQ(ierr);
+    ierr = VecDestroy(&tempSEQ);                                  CHKERRQ(ierr);
+    ierr = VecDestroy(&tempMPI);                                  CHKERRQ(ierr);
 
     return 0;
 }
 
 
+/**
+ * @brief A printing function, using stdout, needed by AmgX.
+ *
+ * @param msg C-style string
+ * @param length The length of the string
+ */
 void AmgXSolver::print_callback(const char *msg, int length)
 {
     std::cout << msg;
 }
 
 
+/**
+ * @brief A printing function, print nothing, needed by AmgX.
+ *
+ * @param msg C-style string
+ * @param length The length of the string
+ */
 void AmgXSolver::print_none(const char *msg, int length) { }
