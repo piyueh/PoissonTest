@@ -25,14 +25,15 @@ int main(int argc, char **argv)
 
     PetscErrorCode      ierr;   // error codes returned by PETSc routines
 
-# ifdef PETSC_USE_LOG
-    PetscLogStage       stage;
-# endif
-
     int                 size, myRank; // MPI size and current rank
                                       // devices used by current process
 
-    AmgXSolver          solver1, solver2;
+    char                mode[5],
+                        file[128];
+
+    AmgXSolver          solver;
+
+    int                 event;
 
     // initialize PETSc and MPI
     ierr = PetscInitialize(&argc, &argv, nullptr, help.c_str());  CHKERRQ(ierr);
@@ -44,7 +45,10 @@ int main(int argc, char **argv)
     // get m and n from command-line argument
     ierr = PetscOptionsGetInt(nullptr, "-Nx", &Nx, nullptr);      CHKERRQ(ierr);
     ierr = PetscOptionsGetInt(nullptr, "-Ny", &Ny, nullptr);      CHKERRQ(ierr);
-
+    ierr = PetscOptionsGetString(nullptr, "-mode", mode, 5, nullptr);
+                                                                  CHKERRQ(ierr);
+    ierr = PetscOptionsGetString(nullptr, "-cfg", file, 128, nullptr);
+                                                                  CHKERRQ(ierr);
 
     // create vectors (x, y, p, b, u)
     ierr = VecCreate(PETSC_COMM_SELF, &x);                        CHKERRQ(ierr);
@@ -97,26 +101,33 @@ int main(int argc, char **argv)
     generateA(Nx, Ny, dx, dy, A);
     ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
 
-    char *mode = "dDDI",
-         *file = "configFiles/configMPI.amgx";
 
-    solver1.initialize(PETSC_COMM_WORLD, size, myRank, mode, file);
-    solver2.initialize(PETSC_COMM_WORLD, size, myRank, mode, file);
+    // initialize the AmgX solver instance
+    solver.initialize(PETSC_COMM_WORLD, size, myRank, mode, file);
 
+    // bind matrix A to the solver
     ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
-    solver1.setA(A);
+    solver.setA(A);
+
+
+    ierr = PetscLogEventRegister("AmgX Section", 0, &event);      CHKERRQ(ierr);
+    ierr = PetscLogEventBegin(event, 0, 0, 0, 0);                 CHKERRQ(ierr);
+
+    // solve
     ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
-    solver2.setA(A);
+    solver.solve(p, b);
 
-    ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
-    solver1.solve(p, b);
-    ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
-    solver2.solve(p, b);
+    ierr = PetscLogEventEnd(event, 0, 0, 0, 0);                 CHKERRQ(ierr);
+
+    // destroy this instance and shutdown AmgX library
+    solver.finalize();
 
 
+    ierr = VecAXPY(p, -1, u);                                     CHKERRQ(ierr);
+    ierr = VecNorm(p, NORM_2, &norm);                             CHKERRQ(ierr);
 
-    solver1.finalize();
-    solver2.finalize();
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "L2-Norm: %g\n", (double)norm);
+                                                                  CHKERRQ(ierr);
 
     ierr = PetscFinalize();                                       CHKERRQ(ierr);
 
