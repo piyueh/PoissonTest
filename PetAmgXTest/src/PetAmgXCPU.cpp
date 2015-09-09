@@ -4,7 +4,7 @@
 # include "cudaCHECK.hpp"
 
 
-static std::string help = "Test PETSc plus AmgX solvers.";
+static std::string help = "Test pure PETSc solvers.";
 
 
 int main(int argc, char **argv)
@@ -24,7 +24,7 @@ int main(int argc, char **argv)
     Mat                 A;      // coefficient matrix
 
     PetscReal           norm2,
-                        normM;   // norm of solution errors
+                        normM;  // norm of solution errors
 
     PetscInt            Niters; // iterations used to converge
 
@@ -33,14 +33,14 @@ int main(int argc, char **argv)
     int                 size, myRank; // MPI size and current rank
                                       // devices used by current process
 
-    char                mode[5],
-                        file[128];
 
-    AmgXSolver          solver;
 
-    int                 event;
 
-    // initialize PETSc and MPI
+    KSP                 ksp;    // krylov solver object
+
+    PC                  pc;     // preconditioner
+
+    // initialize PETSc
     ierr = PetscInitialize(&argc, &argv, nullptr, help.c_str());  CHKERRQ(ierr);
 
     ierr = MPI_Comm_size(PETSC_COMM_WORLD, &size);                CHKERRQ(ierr);
@@ -50,10 +50,7 @@ int main(int argc, char **argv)
     // get m and n from command-line argument
     ierr = PetscOptionsGetInt(nullptr, "-Nx", &Nx, nullptr);      CHKERRQ(ierr);
     ierr = PetscOptionsGetInt(nullptr, "-Ny", &Ny, nullptr);      CHKERRQ(ierr);
-    ierr = PetscOptionsGetString(nullptr, "-mode", mode, 5, nullptr);
-                                                                  CHKERRQ(ierr);
-    ierr = PetscOptionsGetString(nullptr, "-cfg", file, 128, nullptr);
-                                                                  CHKERRQ(ierr);
+
 
     // create vectors (x, y, p, b, u)
     ierr = VecCreate(PETSC_COMM_SELF, &x);                        CHKERRQ(ierr);
@@ -96,7 +93,7 @@ int main(int argc, char **argv)
     ierr = VecSet(p, 0.0);                                        CHKERRQ(ierr);
 
 
-    // initialize and set up the coefficient matrix
+    // initialize and set the coefficient matrix
     ierr = MatCreate(PETSC_COMM_WORLD, &A);                       CHKERRQ(ierr);
     ierr = MatSetSizes(A, PETSC_DECIDE, PETSC_DECIDE, Nx*Ny, Nx*Ny); 
                                                                   CHKERRQ(ierr);
@@ -107,34 +104,34 @@ int main(int argc, char **argv)
     ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
 
 
-    // initialize the AmgX solver instance
-    solver.initialize(PETSC_COMM_WORLD, size, myRank, mode, file);
+    // initialize the PETSc solver instance
+    ierr = KSPCreate(PETSC_COMM_WORLD, &ksp);                     CHKERRQ(ierr);
+
+    // if there's CMD parameters start with -poisson_, it's solver parameter
+    ierr = KSPSetOptionsPrefix(ksp, "poisson_"); 		  CHKERRQ(ierr);
 
     // bind matrix A to the solver
-    ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
-    solver.setA(A);
+    ierr = KSPSetOperators(ksp, A, A);                            CHKERRQ(ierr);
 
+    // set default settings for the case that no solver is specified through CMD
+    ierr = KSPSetType(ksp, KSPCG);                                CHKERRQ(ierr);
+    ierr = KSPCGSetType(ksp, KSP_CG_SYMMETRIC);                   CHKERRQ(ierr);
+    ierr = KSPSetInitialGuessNonzero(ksp, PETSC_TRUE);            CHKERRQ(ierr);
+    ierr = KSPSetNormType(ksp, KSP_NORM_UNPRECONDITIONED);        CHKERRQ(ierr);
+    ierr = KSPSetTolerances(ksp, 1e-12, PETSC_DEFAULT, PETSC_DEFAULT, 10000000);
+                                                                  CHKERRQ(ierr);
 
-    // start logging solve event
-    ierr = PetscLogEventRegister("AmgX Solve", 0, &event);        CHKERRQ(ierr);
-    ierr = PetscLogEventBegin(event, 0, 0, 0, 0);                 CHKERRQ(ierr);
+    // now read parameters from CMD
+    ierr = KSPSetFromOptions(ksp); 				  CHKERRQ(ierr);
 
     // solve
-    ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
-    solver.solve(p, b);
-   
-    // end logging solve event
-    ierr = PetscLogEventEnd(event, 0, 0, 0, 0);                   CHKERRQ(ierr);
+    ierr = KSPSolve(ksp, b, p);                                   CHKERRQ(ierr);
 
-    // get GPU memeory usage
-    getMemUsage(myRank);
-    ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
-
-    // destroy this instance and shutdown AmgX library
-    solver.finalize();
+    // get number of iterations, it doesn't mean the solver converge
+    ierr = KSPGetIterationNumber(ksp, &Niters);                   CHKERRQ(ierr);
 
     // calculate norms of errors
-    ierr = VecAXPY(p, -1, u);                                     CHKERRQ(ierr);
+    ierr = VecAXPY(p, -1.0, u);                                   CHKERRQ(ierr);
     ierr = VecNorm(p, NORM_2, &norm2);                            CHKERRQ(ierr);
     ierr = VecNorm(p, NORM_INFINITY, &normM);                     CHKERRQ(ierr);
 
@@ -142,6 +139,11 @@ int main(int argc, char **argv)
                                                                   CHKERRQ(ierr);
     ierr = PetscPrintf(PETSC_COMM_WORLD, "Max-Norm: %g\n", (double)normM);
                                                                   CHKERRQ(ierr);
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "Number of iterations %D\n", Niters);                                CHKERRQ(ierr);
+                                                                  CHKERRQ(ierr);
+
+    // destroy KSP
+    ierr = KSPDestroy(&ksp);                                      CHKERRQ(ierr);
 
     // finalize PETSc
     ierr = PetscFinalize();                                       CHKERRQ(ierr);

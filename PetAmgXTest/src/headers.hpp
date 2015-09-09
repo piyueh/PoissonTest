@@ -24,3 +24,5 @@ int generateA(const int &Nx, const int &Ny,
         const double &dx, const double &dy, Mat &A);
 
 int getPartVec(const Vec &p, Vec &PartVec, int myRank);
+
+int getMemUsage(const int &myRank);

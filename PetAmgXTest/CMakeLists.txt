@@ -76,16 +76,16 @@ ELSE()
 ENDIF()
 
 
-MESSAGE("-- Finding libpetsc.so")
+MESSAGE("-- Finding libpetsc.so or libpetsc.a")
 FIND_LIBRARY(PETSC_LIBRARIES
              NAMES petsc
              PATHS ${PETSC_DIR} $ENV{PETSC_DIR}
              PATH_SUFFIXES "lib")
 
 IF(${PETSC_LIBRARIES} STREQUAL "PETSC_LIBRARIES-NOTFOUND")
-    MESSAGE(FATAL_ERROR "libpetsc.so was not found")
+    MESSAGE(FATAL_ERROR "libpetsc.so or libpetsc.a was not found")
 ELSE()
-    MESSAGE("-- Finding libpetsc.so - found: " ${PETSC_LIBRARIES})
+    MESSAGE("-- Finding libpetsc.so or libpetsc.a - found: " ${PETSC_LIBRARIES})
 ENDIF()
 
 
@@ -150,18 +150,6 @@ ENDIF()
 
 
 MESSAGE("\n===================================================================")
-MESSAGE("Trying to find Boost...\n")
-FIND_PACKAGE(Boost REQUIRED COMPONENTS program_options timer system)
-
-IF(${Boost_FOUND})
-    MESSAGE("\tBoost_INCLUDE_DIRS: " ${Boost_INCLUDE_DIRS})
-    MESSAGE("\tBoost_LIBRARY_DIRS: " ${Boost_LIBRARY_DIRS})
-    MESSAGE("\tBoost_LIBRARIES: " ${Boost_LIBRARIES})
-ENDIF()
-
-
-
-MESSAGE("\n===================================================================")
 MESSAGE("Trying to find CUDA 6.5...")
 MESSAGE("\nNOTE: If you have several different versions of CUDA, and if CMake ")
 MESSAGE("can not find CUDA 6.5, please define CUDA_TOOLKIT_ROOT_DIR manually ")
@@ -198,36 +186,174 @@ ENDIF()
 
 
 MESSAGE("\n===================================================================")
+MESSAGE("Trying to find libblas.a or libblas.so")
+
+FIND_LIBRARY(BLAS_LIBRARIES 
+             NAMES blas
+             PATHS ${BLAS_DIR} $ENV{BLAS_DIR} $ENV{PATH} $ENV{LD_LIBRARY_PATH}
+             PATH_SUFFIXES "lib" "lib64")
+
+IF(${BLAS_LIBRARIES} STREQUAL "BLAS_LIBRARIES-NOTFOUND")
+    MESSAGE(FATAL_ERROR "libblas.a or libblas.so was not found")
+ELSE()
+    MESSAGE("-- Finding libblas.a or libblas.so - found: " ${BLAS_LIBRARIES})
+ENDIF()
+
+
+
+MESSAGE("\n===================================================================")
+MESSAGE("Trying to find libfblas.a or libfblas.so")
+
+FIND_LIBRARY(FBLAS_LIBRARIES 
+             NAMES fblas
+             PATHS ${BLAS_DIR} $ENV{BLAS_DIR} $ENV{PATH} $ENV{LD_LIBRARY_PATH}
+             PATH_SUFFIXES "lib" "lib64")
+
+IF(${FBLAS_LIBRARIES} STREQUAL "FBLAS_LIBRARIES-NOTFOUND")
+    MESSAGE("-- Finding libfblas.a or libfblas.so - not found")
+    SET(FBLAS_LIBRARIES "")
+ELSE()
+    MESSAGE("-- Finding libfblas.a or libfblas.so - found: " ${FBLAS_LIBRARIES})
+ENDIF()
+
+
+
+MESSAGE("\n===================================================================")
+MESSAGE("Trying to find liblapack.a or liblapack.so")
+
+FIND_LIBRARY(LAPACK_LIBRARIES 
+             NAMES lapack
+             PATHS ${LAPACK_DIR} $ENV{LAPACK_DIR} $ENV{PATH} $ENV{LD_LIBRARY_PATH}
+             PATH_SUFFIXES "lib" "lib64")
+
+IF(${LAPACK_LIBRARIES} STREQUAL "LAPACK_LIBRARIES-NOTFOUND")
+    MESSAGE(FATAL_ERROR "liblapack.a or liblapack.so was not found")
+ELSE()
+    MESSAGE("-- Finding liblapack.a or liblapack.so - found: " ${LAPACK_LIBRARIES})
+ENDIF()
+
+
+
+MESSAGE("\n===================================================================")
+MESSAGE("Trying to find libflapack.a or libflapack.so")
+
+FIND_LIBRARY(FLAPACK_LIBRARIES 
+             NAMES flapack
+             PATHS ${LAPACK_DIR} $ENV{LAPACK_DIR} $ENV{PATH} $ENV{LD_LIBRARY_PATH}
+             PATH_SUFFIXES "lib" "lib64")
+
+IF(${FLAPACK_LIBRARIES} STREQUAL "FLAPACK_LIBRARIES-NOTFOUND")
+    MESSAGE("-- Finding libflapack.a or libflapack.so - not found")
+    SET(FLAPACK_LIBRARIES "")
+ELSE()
+    MESSAGE("-- Finding libflapack.a or libflapack.so - found: " ${FLAPACK_LIBRARIES})
+ENDIF()
+
+
+
+MESSAGE("\n===================================================================")
+MESSAGE("Trying to find libssl.a or libssl.so")
+
+FIND_LIBRARY(SSL_LIBRARIES 
+             NAMES ssl
+             PATHS ${SSL_DIR} $ENV{SSL_DIR} $ENV{PATH} $ENV{LD_LIBRARY_PATH}
+             PATH_SUFFIXES "lib" "lib64")
+
+IF(${SSL_LIBRARIES} STREQUAL "SSL_LIBRARIES-NOTFOUND")
+    MESSAGE(FATAL_ERROR "libssl.a or libssl.so was not found")
+ELSE()
+    MESSAGE("-- Finding libssl.a or libssl.so - found: " ${SSL_LIBRARIES})
+ENDIF()
+
+
+
+MESSAGE("\n===================================================================")
+MESSAGE("Trying to find libcrypto.a or libcrypto.so")
+
+FIND_LIBRARY(CRYPTO_LIBRARIES 
+             NAMES crypto
+             PATHS ${CRYPTO_DIR} $ENV{CRYPTO_DIR} $ENV{PATH} $ENV{LD_LIBRARY_PATH}
+             PATH_SUFFIXES "lib" "lib64")
+
+IF(${CRYPTO_LIBRARIES} STREQUAL "CRYPTO_LIBRARIES-NOTFOUND")
+    MESSAGE(FATAL_ERROR "libcrypto.a or libcrypto.so was not found")
+ELSE()
+    MESSAGE("-- Finding libcrypto.a or libcrypto.so - found: " ${CRYPTO_LIBRARIES})
+ENDIF()
+
+
+
+MESSAGE("\n===================================================================")
+MESSAGE("Trying to find libgfortran.a or libgfortran.so")
+
+FIND_LIBRARY(GFORTRAN_LIBRARIES 
+             NAMES gfortran
+             PATHS ${GFORTRAN_DIR} $ENV{GFORTRAN_DIR} $ENV{PATH} $ENV{LD_LIBRARY_PATH}
+             PATH_SUFFIXES "lib" "lib64")
+
+IF(${GFORTRAN_LIBRARIES} STREQUAL "GFORTRAN_LIBRARIES-NOTFOUND")
+    MESSAGE(FATAL_ERROR "libgfortran.a or libgfortran.so was not found")
+ELSE()
+    MESSAGE("-- Finding libgfortran.a or libgfortran.so - found: " ${GFORTRAN_LIBRARIES})
+ENDIF()
+
+
+
+MESSAGE("\n===================================================================")
 MESSAGE("Setting the information for target and source files...")
 
 SET(SRC ${CMAKE_SOURCE_DIR}/src)
-SET(SOURCE 
+SET(gpuSOURCE
     ${SRC}/PetAmgX.cpp 
     ${SRC}/generateA.cpp
     ${SRC}/generateGrid.cpp
     ${SRC}/generateRHS.cpp
     ${SRC}/generateExt.cpp
+    ${SRC}/GPUFuncs.cpp
     ${SRC}/class_AmgXSolver.cpp)
 
+SET(cpuSOURCE
+    ${SRC}/PetAmgXCPU.cpp 
+    ${SRC}/generateA.cpp
+    ${SRC}/generateGrid.cpp
+    ${SRC}/generateRHS.cpp
+    ${SRC}/generateExt.cpp)
+
 INCLUDE_DIRECTORIES(
-    ${Boost_INCLUDE_DIRS} 
     ${PETSC_INCLUDE_DIRS} 
     ${AMGX_INCLUDE_DIRS} 
     ${CUDA_INCLUDE_DIRS} 
     ${MPI_CXX_INCLUDE_PATH})
 
 LINK_DIRECTORIES(
-    ${Boost_LIBRARY_DIRS} 
     ${CUDA_LIBRARY_DIRS} 
     ${PETSC_LIBRARY_DIRS} 
-    ${AMGX_LIBRARY_DIRS})
+    ${AMGX_LIBRARY_DIRS}
+    ${PETSC_LIBRARY_DIRS})
 
-
-ADD_EXECUTABLE(PetAmgX ${SOURCE})
+ADD_EXECUTABLE(PetAmgX ${gpuSOURCE})
+ADD_EXECUTABLE(PetAmgXCPU ${cpuSOURCE})
 
 TARGET_LINK_LIBRARIES(PetAmgX 
-    ${Boost_LIBRARIES} 
     ${PETSC_LIBRARIES} 
+    ${BLAS_LIBRARIES} 
+    ${LAPACK_LIBRARIES} 
+    ${FBLAS_LIBRARIES} 
+    ${FLAPACK_LIBRARIES} 
     ${AMGX_LIBRARIES} 
     ${CUDA_LIBRARIES} 
-    ${MPI_CXX_LIBRARIES})
+    ${MPI_CXX_LIBRARIES}
+    ${SSL_LIBRARIES}
+    ${CRYPTO_LIBRARIES}
+    ${GFORTRAN_LIBRARIES})
+
+TARGET_LINK_LIBRARIES(PetAmgXCPU 
+    ${PETSC_LIBRARIES} 
+    ${BLAS_LIBRARIES} 
+    ${LAPACK_LIBRARIES} 
+    ${FBLAS_LIBRARIES} 
+    ${FLAPACK_LIBRARIES} 
+    ${MPI_CXX_LIBRARIES}
+    ${SSL_LIBRARIES}
+    ${CRYPTO_LIBRARIES}
+    ${GFORTRAN_LIBRARIES})
