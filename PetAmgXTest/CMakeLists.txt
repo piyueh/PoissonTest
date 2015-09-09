@@ -190,7 +190,7 @@ MESSAGE("Trying to find libblas.a or libblas.so")
 
 FIND_LIBRARY(BLAS_LIBRARIES 
              NAMES blas
-             PATHS ${BLAS_DIR} $ENV{BLAS_DIR} $ENV{PATH} $ENV{LD_LIBRARY_PATH}
+             PATHS ${BLAS_DIR} $ENV{BLAS_DIR} $ENV{BLASDIR}
              PATH_SUFFIXES "lib" "lib64")
 
 IF(${BLAS_LIBRARIES} STREQUAL "BLAS_LIBRARIES-NOTFOUND")
@@ -206,7 +206,7 @@ MESSAGE("Trying to find libfblas.a or libfblas.so")
 
 FIND_LIBRARY(FBLAS_LIBRARIES 
              NAMES fblas
-             PATHS ${BLAS_DIR} $ENV{BLAS_DIR} $ENV{PATH} $ENV{LD_LIBRARY_PATH}
+             PATHS ${BLAS_DIR} $ENV{BLAS_DIR} $ENV{BLASDIR}
              PATH_SUFFIXES "lib" "lib64")
 
 IF(${FBLAS_LIBRARIES} STREQUAL "FBLAS_LIBRARIES-NOTFOUND")
@@ -223,7 +223,7 @@ MESSAGE("Trying to find liblapack.a or liblapack.so")
 
 FIND_LIBRARY(LAPACK_LIBRARIES 
              NAMES lapack
-             PATHS ${LAPACK_DIR} $ENV{LAPACK_DIR} $ENV{PATH} $ENV{LD_LIBRARY_PATH}
+             PATHS ${LAPACK_DIR} $ENV{LAPACK_DIR} $ENV{LAPACKDIR}
              PATH_SUFFIXES "lib" "lib64")
 
 IF(${LAPACK_LIBRARIES} STREQUAL "LAPACK_LIBRARIES-NOTFOUND")
@@ -239,7 +239,7 @@ MESSAGE("Trying to find libflapack.a or libflapack.so")
 
 FIND_LIBRARY(FLAPACK_LIBRARIES 
              NAMES flapack
-             PATHS ${LAPACK_DIR} $ENV{LAPACK_DIR} $ENV{PATH} $ENV{LD_LIBRARY_PATH}
+             PATHS ${LAPACK_DIR} $ENV{LAPACK_DIR} $ENV{LAPACKDIR}
              PATH_SUFFIXES "lib" "lib64")
 
 IF(${FLAPACK_LIBRARIES} STREQUAL "FLAPACK_LIBRARIES-NOTFOUND")
