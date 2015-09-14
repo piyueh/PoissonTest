@@ -5,6 +5,7 @@
  * @version alpha
  * @date 2015-09-01
  */
+# include <cstdlib>
 # include <cuda_runtime.h>
 # include "class_AmgXSolver.hpp"
 # include "cudaCHECK.hpp"
@@ -56,8 +57,28 @@ int AmgXSolver::initialize(MPI_Comm comm, int _Npart, int _myRank,
     // get the number of total cuda devices
     CHECK(cudaGetDeviceCount(&Ndevs));
 
-    // use Robin-type (?) to assign devices to processes
-    devs = new int(myRank % Ndevs);
+    // use round-robin to assign devices to processes
+    //devs = new int(myRank % Ndevs);
+    
+    // another way to assign devices
+    {
+        int         lclSize,
+                    lclRank,
+                    nPerDev,
+                    remain;
+
+        lclSize = std::atoi(std::getenv("OMPI_COMM_WORLD_LOCAL_SIZE"));
+        lclRank = std::atoi(std::getenv("OMPI_COMM_WORLD_LOCAL_RANK"));
+
+        nPerDev = lclSize / Ndevs;
+        remain = lclSize % Ndevs;
+        
+        if (lclRank < (nPerDev+1)*remain)
+            devs = new int(lclRank / (nPerDev + 1));
+        else
+            devs = new int((lclRank - (nPerDev + 1) * remain) / nPerDev + remain);
+    }
+
 
     // only the first instance is in charge of initializing AmgX
     if (count == 1)

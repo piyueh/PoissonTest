@@ -40,6 +40,8 @@ int main(int argc, char **argv)
 
     int                 event;
 
+    PetscBool           mem;
+
     // initialize PETSc and MPI
     ierr = PetscInitialize(&argc, &argv, nullptr, help.c_str());  CHKERRQ(ierr);
 
@@ -54,6 +56,7 @@ int main(int argc, char **argv)
                                                                   CHKERRQ(ierr);
     ierr = PetscOptionsGetString(nullptr, "-cfg", file, 128, nullptr);
                                                                   CHKERRQ(ierr);
+    ierr = PetscOptionsGetBool(nullptr, "-mem", &mem, nullptr);   CHKERRQ(ierr);
 
     // create vectors (x, y, p, b, u)
     ierr = VecCreate(PETSC_COMM_SELF, &x);                        CHKERRQ(ierr);
@@ -127,8 +130,11 @@ int main(int argc, char **argv)
     ierr = PetscLogEventEnd(event, 0, 0, 0, 0);                   CHKERRQ(ierr);
 
     // get GPU memeory usage
-    getMemUsage(myRank);
-    ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
+    if (mem == PETSC_TRUE)
+    {
+        getMemUsage(myRank);
+        ierr = MPI_Barrier(PETSC_COMM_WORLD);                     CHKERRQ(ierr);
+    }
 
     // destroy this instance and shutdown AmgX library
     solver.finalize();
