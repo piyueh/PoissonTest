@@ -118,7 +118,7 @@ int main(int argc, char **argv)
     ierr = KSPCGSetType(ksp, KSP_CG_SYMMETRIC);                   CHKERRQ(ierr);
     ierr = KSPSetInitialGuessNonzero(ksp, PETSC_TRUE);            CHKERRQ(ierr);
     ierr = KSPSetNormType(ksp, KSP_NORM_UNPRECONDITIONED);        CHKERRQ(ierr);
-    ierr = KSPSetTolerances(ksp, 1e-12, PETSC_DEFAULT, PETSC_DEFAULT, 10000000);
+    ierr = KSPSetTolerances(ksp, 1e-08, PETSC_DEFAULT, PETSC_DEFAULT, 10000000);
                                                                   CHKERRQ(ierr);
 
     // now read parameters from CMD
