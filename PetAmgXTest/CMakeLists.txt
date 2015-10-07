@@ -150,6 +150,18 @@ ENDIF()
 
 
 MESSAGE("\n===================================================================")
+MESSAGE("Trying to find Boost...\n")
+FIND_PACKAGE(Boost REQUIRED COMPONENTS timer system)
+
+IF(${Boost_FOUND})
+    MESSAGE("\tBoost_INCLUDE_DIRS: " ${Boost_INCLUDE_DIRS})
+    MESSAGE("\tBoost_LIBRARY_DIRS: " ${Boost_LIBRARY_DIRS})
+    MESSAGE("\tBoost_LIBRARIES: " ${Boost_LIBRARIES})
+ENDIF()
+
+
+
+MESSAGE("\n===================================================================")
 MESSAGE("Trying to find CUDA 6.5...")
 MESSAGE("\nNOTE: If you have several different versions of CUDA, and if CMake ")
 MESSAGE("can not find CUDA 6.5, please define CUDA_TOOLKIT_ROOT_DIR manually ")
@@ -320,12 +332,14 @@ SET(cpuSOURCE
     ${SRC}/generateExt.cpp)
 
 INCLUDE_DIRECTORIES(
+    ${Boost_INCLUDE_DIRS}
     ${PETSC_INCLUDE_DIRS} 
     ${AMGX_INCLUDE_DIRS} 
     ${CUDA_INCLUDE_DIRS} 
     ${MPI_CXX_INCLUDE_PATH})
 
 LINK_DIRECTORIES(
+    ${Boost_LIBRARY_DIRS}
     ${CUDA_LIBRARY_DIRS} 
     ${PETSC_LIBRARY_DIRS} 
     ${AMGX_LIBRARY_DIRS}
@@ -335,6 +349,7 @@ ADD_EXECUTABLE(PetAmgX ${gpuSOURCE})
 ADD_EXECUTABLE(PetAmgXCPU ${cpuSOURCE})
 
 TARGET_LINK_LIBRARIES(PetAmgX 
+    ${Boost_LIBRARIES}
     ${PETSC_LIBRARIES} 
     ${BLAS_LIBRARIES} 
     ${LAPACK_LIBRARIES} 
@@ -348,6 +363,7 @@ TARGET_LINK_LIBRARIES(PetAmgX
     ${GFORTRAN_LIBRARIES})
 
 TARGET_LINK_LIBRARIES(PetAmgXCPU 
+    ${Boost_LIBRARIES}
     ${PETSC_LIBRARIES} 
     ${BLAS_LIBRARIES} 
     ${LAPACK_LIBRARIES} 
