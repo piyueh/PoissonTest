@@ -219,9 +219,13 @@ int main(int argc, char **argv)
     ierr = VecNorm(u, NORM_2, &norm2);                                       CHK;
     ierr = VecNorm(u, NORM_INFINITY, &normM);                                CHK;
 
-    ierr = PetscPrintf(PETSC_COMM_WORLD, "L2-Norm: %g\n", (double)norm2);    CHK;
-    ierr = PetscPrintf(PETSC_COMM_WORLD, "Max-Norm: %g\n", (double)normM);   CHK;
-    ierr = PetscPrintf(PETSC_COMM_WORLD, "Iterations %D\n", Niters);         CHK; 
+
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "\nCase Name: %s\n", caseName);       CHK;
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "\tNx: %D Ny: %D Nz: %D\n", Nx, Ny, Nz);CHK;
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "\tSolve Time: %s", solveTime.c_str());CHK;
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "\tL2-Norm: %g\n", (double)norm2);  CHK;
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "\tMax-Norm: %g\n", (double)normM); CHK;
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "\tIterations %D\n", Niters);       CHK; 
 
 
     ierr = PetscViewerASCIIOpen(PETSC_COMM_WORLD, optFileName, &viewer); CHK;
@@ -233,10 +237,6 @@ int main(int argc, char **argv)
         ierr = KSPDestroy(&ksp);
     else if (std::strcmp(platform, "GPU") == 0)
         amgx.finalize();
-
-
-    ierr = PetscPrintf(PETSC_COMM_WORLD, "Case Name: %s; Solve Time: %s\n", 
-            caseName, solveTime.c_str());                                    CHK;
 
     // finalize PETSc
     ierr = PetscFinalize();                                                  CHK;

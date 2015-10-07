@@ -16,7 +16,5 @@ PetscErrorCode createKSP(KSP &ksp, Mat &A, char *FN)
     ierr = KSPSetReusePreconditioner(ksp, PETSC_TRUE);                  CHKERRQ(ierr);
     ierr = KSPSetFromOptions(ksp);                                      CHKERRQ(ierr);
 
-    ierr = KSPView(ksp, PETSC_VIEWER_STDOUT_WORLD);                     CHKERRQ(ierr);
-
     return 0;
 }
