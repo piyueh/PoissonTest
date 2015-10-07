@@ -9,6 +9,8 @@ static std::string help = "Test PETSc plus AmgX solvers.";
 
 int main(int argc, char **argv)
 {
+    using namespace boost;
+
     PetscInt            Nx,     // number of elements in x-direction
                         Ny;     // number of elements in y-direction
 
@@ -41,6 +43,10 @@ int main(int argc, char **argv)
     int                 event;
 
     PetscBool           mem;
+
+    timer::cpu_timer    timer;
+    std::string         solveTime1,
+                        solveTime2;
 
     // initialize PETSc and MPI
     ierr = PetscInitialize(&argc, &argv, nullptr, help.c_str());  CHKERRQ(ierr);
@@ -117,14 +123,23 @@ int main(int argc, char **argv)
     ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
     solver.setA(A);
 
-
     // start logging solve event
     ierr = PetscLogEventRegister("AmgX Solve", 0, &event);        CHKERRQ(ierr);
     ierr = PetscLogEventBegin(event, 0, 0, 0, 0);                 CHKERRQ(ierr);
 
     // solve
     ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
+    timer.start();
     solver.solve(p, b);
+    solveTime1 = timer.format();
+
+    // set all entries as zeros in the vector of unknows
+    ierr = VecSet(p, 0.0);                                        CHKERRQ(ierr);
+    // solve
+    ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
+    timer.start();
+    solver.solve(p, b);
+    solveTime2 = timer.format();
    
     // end logging solve event
     ierr = PetscLogEventEnd(event, 0, 0, 0, 0);                   CHKERRQ(ierr);
@@ -151,6 +166,12 @@ int main(int argc, char **argv)
 
     // finalize PETSc
     ierr = PetscFinalize();                                       CHKERRQ(ierr);
+
+    std::cout << std::endl;
+    std::cout << "Solve time1: " << std::endl;
+    std::cout << "\t" << solveTime1 << std::endl;
+    std::cout << "Solve time2: " << std::endl;
+    std::cout << "\t" << solveTime2 << std::endl;
 
     return 0;
 }

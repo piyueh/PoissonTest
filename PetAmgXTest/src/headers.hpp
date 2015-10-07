@@ -6,6 +6,7 @@
 # include <vector>
 # include <cmath>
 # include <petscksp.h>
+# include <boost/timer/timer.hpp>
 
 # define c1 2.0*1.0*M_PI
 # define c2 -2.0*c1*c1
