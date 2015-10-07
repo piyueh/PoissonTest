@@ -1,13 +1,13 @@
 /**
  * @file class_AmgXSolver.cpp
  * @brief Definition of member functions of the class AmgXSolver
- * @author Pi-Yueh Chuang
+ * @author Pi-Yueh Chuang (pychuang@gwu.edu)
  * @version alpha
  * @date 2015-09-01
  */
 # include <cstdlib>
 # include <cuda_runtime.h>
-# include "class_AmgXSolver.hpp"
+# include "AmgXSolver.hpp"
 # include "cudaCHECK.hpp"
 
 
@@ -61,6 +61,11 @@ int AmgXSolver::initialize(MPI_Comm comm, int _Npart, int _myRank,
     //devs = new int(myRank % Ndevs);
     
     // another way to assign devices
+    if (Npart == 1)
+    {
+        devs = new int(0);
+    }
+    else
     {
         int         lclSize,
                     lclRank,
@@ -204,6 +209,7 @@ int AmgXSolver::finalize()
  */
 int AmgXSolver::setA(Mat &A)
 {
+    MatType         type;
     PetscInt        nLclRows,
                     nGlbRows;
     const PetscInt  *row, *col;
@@ -218,8 +224,25 @@ int AmgXSolver::setA(Mat &A)
     // Get number of rows in global matrix
     ierr = MatGetSize(A, &nGlbRows, nullptr);                     CHKERRQ(ierr);
 
-    // Get local matrix and its raw data
-    ierr = MatMPIAIJGetLocalMat(A, MAT_INITIAL_MATRIX, &lclA);    CHKERRQ(ierr);
+    // Get and check whether the Mat type is supported
+    ierr = MatGetType(A, &type);                                  CHKERRQ(ierr);
+    if (std::strcmp(type, MATSEQAIJ) == 0)
+    {
+        // make lclA point to the same memory as A does
+        lclA = A;
+    }
+    else if (std::strcmp(type, MATMPIAIJ) == 0)
+    {
+        // Get local matrix and its raw data
+        ierr = MatMPIAIJGetLocalMat(A, MAT_INITIAL_MATRIX, &lclA);CHKERRQ(ierr);
+    }
+    else
+    {
+        std::cerr << "Mat type " << type 
+                  << " is not supported now!" << std::endl;
+        exit(0);
+    }
+
     ierr = MatGetRowIJ(lclA, 0, PETSC_FALSE, PETSC_FALSE, 
             &nLclRows, &row, &col, &done);                        CHKERRQ(ierr);
     ierr = MatSeqAIJGetArray(lclA, &data);                        CHKERRQ(ierr);
@@ -258,7 +281,18 @@ int AmgXSolver::setA(Mat &A)
 
     // deallocate col64 and destroy local matrix
     delete [] col64;
-    ierr = MatDestroy(&lclA);                                     CHKERRQ(ierr);
+
+    // unlink or destroy lclA
+    if (std::strcmp(type, MATSEQAIJ) == 0)
+    {
+        // unlink lclA
+        lclA = nullptr;
+    }
+    else if (std::strcmp(type, MATMPIAIJ) == 0)
+    {
+        // destroy local matrix
+        ierr = MatDestroy(&lclA);                                 CHKERRQ(ierr);
+    }
 
     // bind the matrix A to the solver
     MPI_Barrier(AmgXComm);
@@ -430,6 +464,38 @@ int AmgXSolver::getPartVec(const Mat &A, int *& partVec)
     ierr = VecDestroy(&tempMPI);                                  CHKERRQ(ierr);
 
     return 0;
+}
+
+
+/**
+ * @brief Get the number of iterations of last solve phase
+ *
+ * @return number of iterations
+ */
+int AmgXSolver::getIters()
+{
+    int         iter;
+
+    AMGX_solver_get_iterations_number(solver, &iter);
+
+    return iter;
+}
+
+
+/**
+ * @brief Get the residual at a specific iteration in last solve phase
+ *
+ * @param iter a specific iteration during the last solve phase
+ *
+ * @return residual
+ */
+double AmgXSolver::getResidual(const int &iter)
+{
+    double      res;
+
+    AMGX_solver_get_iteration_residual(solver, iter, 0, &res);
+
+    return res;
 }
 
 

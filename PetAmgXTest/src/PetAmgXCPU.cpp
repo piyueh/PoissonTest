@@ -1,5 +1,5 @@
 # include "headers.hpp"
-# include "class_AmgXSolver.hpp"
+# include "AmgXSolver.hpp"
 # include <cuda_runtime.h>
 # include "cudaCHECK.hpp"
 

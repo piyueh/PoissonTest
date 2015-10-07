@@ -10,6 +10,7 @@
 
 # include <iostream>
 # include <string>
+# include <cstring>
 # include <petscmat.h>
 # include <petscvec.h>
 # include <amgx_c.h>
@@ -40,6 +41,12 @@ class AmgXSolver
 
         /// solve the problem, soultion vector will be updated in the end
         int solve(Vec &p, Vec &b);
+
+        /// Get the number of iterations of last solve phase
+        int getIters();
+
+        /// Get the residual at a specific iteration in last solve phase
+        double getResidual(const int &iter);
 
 
     private:
