@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#SBATCH --job-name="PetAmgX"
+#SBATCH --nodes=20
+#SBATCH --ntasks-per-node=2
+#SBATCH --time=00:30:00
+#SBATCH --output=slurm-job-%j.out
+#SBATCH --error=slurm-job-%j.err
+#SBATCH --partition=ivygpu-noecc
+
+module load openmpi/1.8/gcc/4.7/cuda
+module load cuda/toolkit/6.5
+module load boost
+module load lapack/gcc
+module load blas/gcc
+
+export LM_LICENSE_FILE=/home/pychuang/myPackages/AmgX/amgx_trial-exp-Nov-01-2015.lic
+export LD_LIBRARY_PATH=/home/pychuang/myPackages/AmgX/lib:$LD_LIBRARY_PATH
+export PETAMGX_DIR=/home/pychuang/PetAmgXTest
+
+nvidia-smi
+
+mpiexec -display-map -n 40 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 40GPU_NxNyNz320 -platform GPU -Nx 320 -Ny 320 -Nz 320 -cfgFileName ${PETAMGX_DIR}/configFiles/solversAmgXOptions.info -optFileName performance1.txt

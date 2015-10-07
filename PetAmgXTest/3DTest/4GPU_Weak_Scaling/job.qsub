@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#SBATCH --job-name="PetAmgX"
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=2
+#SBATCH --time=00:30:00
+#SBATCH --output=slurm-job-%j.out
+#SBATCH --error=slurm-job-%j.err
+#SBATCH --partition=ivygpu-noecc
+
+module load openmpi/1.8/gcc/4.7/cuda
+module load cuda/toolkit/6.5
+module load boost
+module load lapack/gcc
+module load blas/gcc
+
+export LM_LICENSE_FILE=/home/pychuang/myPackages/AmgX/amgx_trial-exp-Nov-01-2015.lic
+export LD_LIBRARY_PATH=/home/pychuang/myPackages/AmgX/lib:$LD_LIBRARY_PATH
+export PETAMGX_DIR=/home/pychuang/PetAmgXTest
+
+nvidia-smi
+
+mpiexec -display-map -n 4 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 4GPU_Weak_Scaling_1 -platform GPU -Nx 10 -Ny 10 -Nz 10 -cfgFileName ${PETAMGX_DIR}/configFiles/solversAmgXOptions.info -optFileName performance1.txt
+
+mpiexec -n 4 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 4GPU_Weak_Scaling_2 -platform GPU -Nx 20 -Ny 20 -Nz 20 -cfgFileName ${PETAMGX_DIR}/configFiles/solversAmgXOptions.info -optFileName performance2.txt
+
+mpiexec -n 4 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 4GPU_Weak_Scaling_3 -platform GPU -Nx 40 -Ny 40 -Nz 40 -cfgFileName ${PETAMGX_DIR}/configFiles/solversAmgXOptions.info -optFileName performance3.txt
+
+mpiexec -n 4 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 4GPU_Weak_Scaling_4 -platform GPU -Nx 80 -Ny 80 -Nz 80 -cfgFileName ${PETAMGX_DIR}/configFiles/solversAmgXOptions.info -optFileName performance4.txt
+
+mpiexec -n 4 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 4GPU_Weak_Scaling_5 -platform GPU -Nx 160 -Ny 160 -Nz 160 -cfgFileName ${PETAMGX_DIR}/configFiles/solversAmgXOptions.info -optFileName performance5.txt
+
+mpiexec -n 4 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 4GPU_Weak_Scaling_6 -platform GPU -Nx 320 -Ny 320 -Nz 320 -cfgFileName ${PETAMGX_DIR}/configFiles/solversAmgXOptions.info -optFileName performance6.txt
+
+mpiexec -n 4 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 4GPU_Weak_Scaling_7 -platform GPU -Nx 640 -Ny 640 -Nz 640 -cfgFileName ${PETAMGX_DIR}/configFiles/solversAmgXOptions.info -optFileName performance7.txt
+
+

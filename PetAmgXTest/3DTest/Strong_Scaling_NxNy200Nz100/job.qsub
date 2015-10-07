@@ -1,0 +1,33 @@
+#!/bin/bash
+
+#SBATCH --job-name="PetAmgX"
+#SBATCH --nodes=16
+#SBATCH --ntasks-per-node=2
+#SBATCH --time=00:10:00
+#SBATCH --output=slurm-job-%j.out
+#SBATCH --error=slurm-job-%j.err
+#SBATCH --partition=ivygpu-noecc
+
+module load openmpi/1.8/gcc/4.7/cuda
+module load cuda/toolkit/6.5
+module load boost
+module load lapack/gcc
+module load blas/gcc
+
+export LM_LICENSE_FILE=/home/pychuang/myPackages/AmgX/amgx_trial-exp-Nov-01-2015.lic
+export LD_LIBRARY_PATH=/home/pychuang/myPackages/AmgX/lib:$LD_LIBRARY_PATH
+export PETAMGX_DIR=/home/pychuang/PetAmgXTest
+
+nvidia-smi
+
+mpiexec -display-map -n 1 -map-by ppr:1:node ${PETAMGX_DIR}/bin/PetAmgX -caseName Strong_Scaling_NxNy200Nz100_1 -platform GPU -Nx 200 -Ny 200 -Nz 100 -cfgFileName ${PETAMGX_DIR}/configFiles/solversAmgXOptions.info -optFileName performance1.txt
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName Strong_Scaling_NxNy200Nz100_2 -platform GPU -Nx 200 -Ny 200 -Nz 100 -cfgFileName ${PETAMGX_DIR}/configFiles/solversAmgXOptions.info -optFileName performance2.txt
+
+mpiexec -n 4 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName Strong_Scaling_NxNy200Nz100_4 -platform GPU -Nx 200 -Ny 200 -Nz 100 -cfgFileName ${PETAMGX_DIR}/configFiles/solversAmgXOptions.info -optFileName performance3.txt
+
+mpiexec -n 8 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName Strong_Scaling_NxNy200Nz100_8 -platform GPU -Nx 200 -Ny 200 -Nz 100 -cfgFileName ${PETAMGX_DIR}/configFiles/solversAmgXOptions.info -optFileName performance4.txt
+
+mpiexec -n 16 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName Strong_Scaling_NxNy200Nz100_16 -platform GPU -Nx 200 -Ny 200 -Nz 100 -cfgFileName ${PETAMGX_DIR}/configFiles/solversAmgXOptions.info -optFileName performance5.txt
+
+mpiexec -n 32 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName Strong_Scaling_NxNy200Nz100_32 -platform GPU -Nx 200 -Ny 200 -Nz 100 -cfgFileName ${PETAMGX_DIR}/configFiles/solversAmgXOptions.info -optFileName performance6.txt

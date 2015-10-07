@@ -1,0 +1,5 @@
+AMGX ERROR: file /home-2/marsaev/beta_test/release_1.2/amg/base/src/amgx_c.cu line    586
+AMGX ERROR: file /home-2/marsaev/beta_test/release_1.2/amg/base/src/amgx_c.cu line    586
+AMGX ERROR: CUDA kernel launch error.
+AMGX ERROR: CUDA kernel launch error.
+slurmstepd: *** JOB 1339825 ON node333 CANCELLED AT 2015-10-07T13:50:52 ***
