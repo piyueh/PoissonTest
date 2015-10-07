@@ -322,7 +322,8 @@ SET(gpuSOURCE
     ${SRC}/generateRHS.cpp
     ${SRC}/generateExt.cpp
     ${SRC}/GPUFuncs.cpp
-    ${SRC}/AmgXSolver.cpp)
+    ${SRC}/AmgXSolver.cpp
+    ${SRC}/createKSP.cpp)
 
 SET(cpuSOURCE
     ${SRC}/PetAmgXCPU.cpp 

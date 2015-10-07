@@ -58,8 +58,7 @@ int main(int argc, char **argv)
     PetscMPIInt         size,   // MPI size
                         myRank; // rank of current process
 
-    PetscBool           set,
-                        mem;    // flag for whether to dump GPU memory usage
+    PetscBool           set;
 
     KSPConvergedReason  reason;
 
@@ -68,11 +67,12 @@ int main(int argc, char **argv)
 
     std::string         solveTime;
 
-    AMGX_Mode           mode = AMGX_mode_dDDI;
+    std::string         mode = "dDDI";
 
     char                cfgFileName[PETSC_MAX_PATH_LEN],
                         optFileName[PETSC_MAX_PATH_LEN],
-                        platform[4];
+                        platform[4],
+                        caseName[PETSC_MAX_PATH_LEN];
 
     PetscLogStage       stageSolving;
 
@@ -91,6 +91,10 @@ int main(int argc, char **argv)
 
 
     // get parameters from command-line arguments
+    ierr = PetscOptionsGetString(nullptr, "-caseName", 
+            caseName, PETSC_MAX_PATH_LEN, &set);                             CHK;
+    CHKMSG(set, "caseName not yet set!");
+
     ierr = PetscOptionsGetInt(nullptr, "-Nx", &Nx, &set);                    CHK;
     CHKMSG(set, "Nx not yet set!");
 
@@ -100,18 +104,16 @@ int main(int argc, char **argv)
     ierr = PetscOptionsGetInt(nullptr, "-Nz", &Nz, &set);                    CHK;
     CHKMSG(set, "Nx not yet set!");
 
-    ierr = PetscOptionsGetString(nullptr, "-platform", platform, 4, &set);       CHK;
-    CHKMSG(set, "Nx not yet set!");
+    ierr = PetscOptionsGetString(nullptr, "-platform", platform, 4, &set);   CHK;
+    CHKMSG(set, "platform not yet set!");
 
     ierr = PetscOptionsGetString(nullptr, "-cfgFileName", 
-            cfgFileName, PETSC_MAX_PATH_LEN, &set);                    CHK;
+            cfgFileName, PETSC_MAX_PATH_LEN, &set);                          CHK;
     CHKMSG(set, "cfgFileName (configuration file) not yet set!");
 
     ierr = PetscOptionsGetString(nullptr, "-optFileName", 
-            optFileName, PETSC_MAX_PATH_LEN, &set);                    CHK;
+            optFileName, PETSC_MAX_PATH_LEN, &set);                          CHK;
     CHKMSG(set, "optFileName (output file) not yet set!");
-
-    ierr = PetscOptionsGetBool(nullptr, "-mem", &mem, nullptr);              CHK;
 
 
     // create DMDA object
@@ -164,70 +166,62 @@ int main(int argc, char **argv)
 
 
     // initialize and set up the coefficient matrix
-    ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHK;
-    ierr = DMSetMatType(grid, MATAIJ); CHK;
-    ierr = DMCreateMatrix(grid, &A); CHK;
-    ierr = MatSetOption(A, MAT_NEW_NONZERO_LOCATION_ERR, PETSC_TRUE); CHK;
-    ierr = MatSetOption(A, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE); CHK;
+    ierr = MPI_Barrier(PETSC_COMM_WORLD);                                    CHK;
+    ierr = DMSetMatType(grid, MATAIJ);                                       CHK;
+    ierr = DMCreateMatrix(grid, &A);                                         CHK;
+    ierr = MatSetOption(A, MAT_NEW_NONZERO_LOCATION_ERR, PETSC_TRUE);        CHK;
+    ierr = MatSetOption(A, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_TRUE);      CHK;
 
-    ierr = generateA(grid, dx, dy, dz, A); CHK;
+    ierr = generateA(grid, dx, dy, dz, A);                                   CHK;
 
     if (std::strcmp(platform, "CPU") == 0)
     {
+        ierr = createKSP(ksp, A, cfgFileName);                               CHK;
 
-        // create ksp solver
-        ierr = PetscOptionsInsertFile(PETSC_COMM_WORLD, cfgFileName, PETSC_FALSE); CHK;
+        ierr = PetscLogStagePush(stageSolving);                              CHK;
 
-        // create KSP for intermaediate fluxes system
-        ierr = KSPCreate(PETSC_COMM_WORLD, &ksp); CHKERRQ(ierr);
-        ierr = KSPSetOperators(ksp, A, A); CHKERRQ(ierr);
-        ierr = KSPSetInitialGuessNonzero(ksp, PETSC_TRUE); CHKERRQ(ierr);
-        ierr = KSPSetType(ksp, KSPCG); CHKERRQ(ierr);
-        ierr = KSPSetReusePreconditioner(ksp, PETSC_TRUE); CHKERRQ(ierr);
-        ierr = KSPSetFromOptions(ksp); CHKERRQ(ierr);
+        timer.start();
+        ierr = KSPSolve(ksp, rhs, u);                                        CHK;
+        solveTime = timer.format();
 
-        ierr = KSPView(ksp, PETSC_VIEWER_STDOUT_WORLD); CHKERRQ(ierr);
+        ierr = PetscLogStagePop();                                           CHK;
 
-        ierr = KSPSetFromOptions(ksp); 				  CHKERRQ(ierr);
-
-        ierr = PetscLogStagePush(stageSolving); CHK;
-        ierr = KSPSolve(ksp, rhs, u);                                   CHKERRQ(ierr);
-        ierr = PetscLogStagePop();
-
-        ierr = KSPGetConvergedReason(ksp, &reason); CHKERRQ(ierr);
+        ierr = KSPGetConvergedReason(ksp, &reason);                          CHK;
         if (reason < 0)
         {
-            ierr = PetscPrintf(PETSC_COMM_WORLD, 
-                    "\nERROR: Diverged due to reason: %d\n", reason); CHKERRQ(ierr);
-
+            ierr = PetscPrintf(PETSC_COMM_WORLD, "\nDiverged: %d\n", reason);CHK;
             exit(0);
         }
 
-        ierr = KSPGetIterationNumber(ksp, &Niters);                   CHKERRQ(ierr);
+        ierr = KSPGetIterationNumber(ksp, &Niters);                          CHK;
     }
     else if (std::strcmp(platform, "GPU") == 0)
     {
         amgx.initialize(PETSC_COMM_WORLD, size, myRank, "dDDI", cfgFileName);
 
-        ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHK;
+        ierr = MPI_Barrier(PETSC_COMM_WORLD);                                CHK;
         amgx.setA(A);
 
-        ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHK;
+        ierr = MPI_Barrier(PETSC_COMM_WORLD);                                CHK;
         ierr = PetscLogStagePush(stageSolving); CHK;
+
+        timer.start();
         amgx.solve(u, rhs);
+        solveTime = timer.format();
+
         ierr = PetscLogStagePop();
 
         Niters = amgx.getIters();
     }
 
     // calculate norms of errors
-    ierr = VecAXPY(u, -1.0, u_exact);                                   CHKERRQ(ierr);
-    ierr = VecNorm(u, NORM_2, &norm2);                            CHKERRQ(ierr);
-    ierr = VecNorm(u, NORM_INFINITY, &normM);                     CHKERRQ(ierr);
+    ierr = VecAXPY(u, -1.0, u_exact);                                        CHK;
+    ierr = VecNorm(u, NORM_2, &norm2);                                       CHK;
+    ierr = VecNorm(u, NORM_INFINITY, &normM);                                CHK;
 
-    ierr = PetscPrintf(PETSC_COMM_WORLD, "L2-Norm: %g\n", (double)norm2); CHK;
-    ierr = PetscPrintf(PETSC_COMM_WORLD, "Max-Norm: %g\n", (double)normM); CHK;
-    ierr = PetscPrintf(PETSC_COMM_WORLD, "Number of iterations %D\n", Niters);CHK; 
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "L2-Norm: %g\n", (double)norm2);    CHK;
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "Max-Norm: %g\n", (double)normM);   CHK;
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "Iterations %D\n", Niters);         CHK; 
 
 
     ierr = PetscViewerASCIIOpen(PETSC_COMM_WORLD, optFileName, &viewer); CHK;
@@ -235,69 +229,17 @@ int main(int argc, char **argv)
     ierr = PetscViewerDestroy(&viewer); CHK;
     
 
-
-    /*
-
-    // initialize the AmgX solver instance
-    solver.initialize(PETSC_COMM_WORLD, size, myRank, mode, file);
-
-    // bind matrix A to the solver
-    ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHK;
-    solver.setA(A);
-
-    // start logging solve event
-    ierr = PetscLogEventRegister("AmgX Solve", 0, &event);        CHK;
-    ierr = PetscLogEventBegin(event, 0, 0, 0, 0);                 CHK;
-
-    // solve
-    ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHK;
-    timer.start();
-    solver.solve(p, b);
-    solveTime1 = timer.format();
-
-    // set all entries as zeros in the vector of unknows
-    ierr = VecSet(p, 0.0);                                        CHK;
-    // solve
-    ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHK;
-    timer.start();
-    solver.solve(p, b);
-    solveTime2 = timer.format();
-   
-    // end logging solve event
-    ierr = PetscLogEventEnd(event, 0, 0, 0, 0);                   CHK;
-
-    // get GPU memeory usage
-    if (mem == PETSC_TRUE)
-    {
-        getMemUsage(myRank);
-        ierr = MPI_Barrier(PETSC_COMM_WORLD);                     CHK;
-    }
-
-    // destroy this instance and shutdown AmgX library
-    solver.finalize();
-
-    // calculate norms of errors
-    ierr = VecAXPY(p, -1, u);                                     CHK;
-    ierr = VecNorm(p, NORM_2, &norm2);                            CHK;
-    ierr = VecNorm(p, NORM_INFINITY, &normM);                     CHK;
-
-    ierr = PetscPrintf(PETSC_COMM_WORLD, "L2-Norm: %g\n", (double)norm2);
-                                                                  CHK;
-    ierr = PetscPrintf(PETSC_COMM_WORLD, "Max-Norm: %g\n", (double)normM);
-                                                                  CHK;
+    if (std::strcmp(platform, "CPU") == 0)
+        ierr = KSPDestroy(&ksp);
+    else if (std::strcmp(platform, "GPU") == 0)
+        amgx.finalize();
 
 
-    std::cout << std::endl;
-    std::cout << "Solve time1: " << std::endl;
-    std::cout << "\t" << solveTime1 << std::endl;
-    std::cout << "Solve time2: " << std::endl;
-    std::cout << "\t" << solveTime2 << std::endl;
-    ierr = VecView(rhs, PETSC_VIEWER_STDOUT_WORLD);                          CHK;
-    ierr = VecView(u_exact, PETSC_VIEWER_STDOUT_WORLD);                      CHK;
-    */
+    ierr = PetscPrintf(PETSC_COMM_WORLD, "Case Name: %s; Solve Time: %s\n", 
+            caseName, solveTime.c_str());                                    CHK;
 
     // finalize PETSc
-    ierr = PetscFinalize();                                       CHK;
+    ierr = PetscFinalize();                                                  CHK;
 
     return 0;
 }
