@@ -1,86 +1,576 @@
 # include "headers.hpp"
 
-int generateA(const int &Nx, const int &Ny,
-        const double &dx, const double &dy, Mat &A)
+PetscErrorCode generateA(const DM &grid, 
+        const PetscReal &dx, const PetscReal &dy, const PetscReal &dz, Mat &A)
 {
-    PetscInt            iBg, 
-                        iEd;
-    PetscScalar         cx,
-                        cy,
-                        cdiag;
     PetscErrorCode      ierr;   // error codes returned by PETSc routines
 
-    std::vector<PetscInt>       colIdx;
-    std::vector<PetscScalar>    data;
+    PetscInt            xbg, xed,
+                        ybg, yed,
+                        zbg, zed;
+
+    PetscInt            Nx, Ny, Nz;
+
+    MatStencil          row;
+
+    PetscScalar         Cx,
+                        Cy,
+                        Cz,
+                        Cd;
 
 
-    cx = 1.0 / dx / dx;
-    cy = 1.0 / dy / dy;
-    cdiag = -2.0 * (cx + cy);
 
-    ierr = MatGetOwnershipRange(A, &iBg, &iEd);                   CHKERRQ(ierr);
+    // get indices for left-bottom and right-top corner
+    ierr = DMDAGetCorners(grid, &xbg, &ybg, &zbg, 
+            &xed, &yed, &zed);                                     CHKERRQ(ierr);
 
-    for(int iRow=iBg; iRow<iEd; ++iRow)
+    ierr = DMDAGetInfo(grid, nullptr, &Nx, &Ny, &Nz, 
+            nullptr, nullptr, nullptr, nullptr, nullptr,
+            nullptr, nullptr, nullptr, nullptr);                   CHKERRQ(ierr);
+
+    xed += xbg;
+    yed += ybg;
+    zed += zbg;
+
+    Cx = 1.0 / dx / dx;
+    Cy = 1.0 / dy / dy;
+    Cz = 1.0 / dz / dz;
+    Cd = -2.0 * (Cx + Cy + Cz);
+
+    for(int k=zbg; k<zed; ++k)
     {
-        PetscInt        &col = iRow;
-        PetscInt        grid_i = iRow % Nx,
-                        grid_j = iRow / Nx;
+        for(int j=ybg; j<yed; ++j)
+        {
+            for(int i=xbg; i<xed; ++i)
+            {
+                row.i = i; row.j = j; row.k = k; row.c = 0;
 
-        colIdx.clear(); data.clear();
-        
-        if (grid_i == 0 && grid_j == 0)
-        {
-            colIdx = {col, col+1, col+Nx};
-            data = {cdiag+cx+cy+1, cx, cy};
-        }
-        else if (grid_i == Nx-1 && grid_j == 0)
-        {
-            colIdx = {col-1, col, col+Nx};
-            data = {cx, cdiag+cx+cy, cy};
-        }
-        else if (grid_i == 0 && grid_j == Ny-1)
-        {
-            colIdx = {col-Nx, col, col+1};
-            data = {cy, cdiag+cx+cy, cx};
-        }
-        else if (grid_i == Nx - 1 && grid_j == Ny-1)
-        {
-            colIdx = {col-Nx, col-1, col};
-            data = {cy, cx, cdiag+cx+cy};
-        }
-        else if (grid_i == 0)
-        {
-            colIdx = {col-Nx, col, col+1, col+Nx};
-            data = {cy, cdiag+cx, cx, cy};
-        }
-        else if (grid_i == Nx-1)
-        {
-            colIdx = {col-Nx, col-1, col, col+Nx};
-            data = {cy, cx, cdiag+cx, cy};
-        }
-        else if (grid_j == 0)
-        {
-            colIdx = {col-1, col, col+1, col+Nx};
-            data = {cx, cdiag+cy, cx, cy};
-        }
-        else if (grid_j == Ny-1)
-        {
-            colIdx = {col-Nx, col-1, col, col+1};
-            data = {cy, cx, cdiag+cy, cx};
-        }
-        else
-        {
-            colIdx = {col-Nx, col-1, col, col+1, col+Nx};
-            data = {cy, cx, cdiag, cx, cy};
-        }
+                // Corners
+                if (k == 0 && j == 0 && i == 0)
+                {
+                    MatStencil      col[4];
+                    PetscScalar     values[4];
 
-        ierr = MatSetValues(A, 1, &iRow, colIdx.size(), colIdx.data(), 
-                            data.data(), INSERT_VALUES);          CHKERRQ(ierr);
+                    for (int stcl=0; stcl<4; stcl++)  col[stcl] = row;
+
+                                   col[1].k += 1;
+                                   col[2].j += 1;
+                                   col[3].i += 1;
+
+                    values[0] = Cd + Cz + Cy + Cx + 1;
+                                    values[1] = Cz;
+                                    values[2] = Cy;
+                                    values[3] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 4, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (k == 0 && j == 0 && i == Nx-1)
+                {
+                    MatStencil      col[4];
+                    PetscScalar     values[4];
+
+                    for (int stcl=0; stcl<4; stcl++)  col[stcl] = row;
+
+                                   col[1].k += 1;
+                                   col[2].j += 1;
+                    col[3].i -= 1;               
+
+                    values[0] = Cd + Cz + Cy + Cx;
+                                    values[1] = Cz;
+                                    values[2] = Cy;
+                    values[3] = Cx;                
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 4, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (k == 0 && j == Ny-1 && i == Nx-1)
+                {
+                    MatStencil      col[4];
+                    PetscScalar     values[4];
+
+                    for (int stcl=0; stcl<4; stcl++)  col[stcl] = row;
+
+                                   col[1].k += 1;
+                    col[2].j -= 1;               
+                    col[3].i -= 1;               
+
+                    values[0] = Cd + Cz + Cy + Cx;
+                                    values[1] = Cz;
+                    values[2] = Cy;                
+                    values[3] = Cx;                
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 4, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (k == 0 && j == Ny-1 && i == 0)
+                {
+                    MatStencil      col[4];
+                    PetscScalar     values[4];
+
+                    for (int stcl=0; stcl<4; stcl++)  col[stcl] = row;
+
+                                   col[1].k += 1;
+                    col[2].j -= 1;               
+                                   col[3].i += 1;
+
+                    values[0] = Cd + Cz + Cy + Cx;
+                                    values[1] = Cz;
+                    values[2] = Cy;                
+                                    values[3] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 4, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (k == Nz-1 && j == 0 && i == 0)
+                {
+                    MatStencil      col[4];
+                    PetscScalar     values[4];
+
+                    for (int stcl=0; stcl<4; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1;               
+                                   col[2].j += 1;
+                                   col[3].i += 1;
+
+                    values[0] = Cd + Cz + Cy + Cx;
+                    values[1] = Cz;                
+                                    values[2] = Cy;
+                                    values[3] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 4, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (k == Nz-1 && j == 0 && i == Nx-1)
+                {
+                    MatStencil      col[4];
+                    PetscScalar     values[4];
+
+                    for (int stcl=0; stcl<4; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1;               
+                                   col[2].j += 1;
+                    col[3].i -= 1;               
+
+                    values[0] = Cd + Cz + Cy + Cx;
+                    values[1] = Cz;                
+                                    values[2] = Cy;
+                    values[3] = Cx;                
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 4, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (k == Nz-1 && j == Ny-1 && i == Nx-1)
+                {
+                    MatStencil      col[4];
+                    PetscScalar     values[4];
+
+                    for (int stcl=0; stcl<4; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1;               
+                    col[2].j -= 1;               
+                    col[3].i -= 1;               
+
+                    values[0] = Cd + Cz + Cy + Cx;
+                    values[1] = Cz;                
+                    values[2] = Cy;                
+                    values[3] = Cx;                
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 4, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (k == Nz-1 && j == Ny-1 && i == 0)
+                {
+                    MatStencil      col[4];
+                    PetscScalar     values[4];
+
+                    for (int stcl=0; stcl<4; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1;               
+                    col[2].j -= 1;               
+                                   col[3].i += 1;
+
+                    values[0] = Cd + Cz + Cy + Cx;
+                    values[1] = Cz;                
+                    values[2] = Cy;                
+                                    values[3] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 4, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+
+                // Edges
+                else if (k == 0 && j == 0)
+                {
+                    MatStencil      col[5];
+                    PetscScalar     values[5];
+
+                    for (int stcl=0; stcl<5; stcl++)  col[stcl] = row;
+
+                                   col[1].k += 1;
+                                   col[2].j += 1;
+                    col[3].i -= 1; col[4].i += 1;
+
+                    values[0] = Cd + Cz + Cy;
+                                    values[1] = Cz;
+                                    values[2] = Cy;
+                    values[3] = Cx; values[4] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 5, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (k == 0 && j == Ny-1)
+                {
+                    MatStencil      col[5];
+                    PetscScalar     values[5];
+
+                    for (int stcl=0; stcl<5; stcl++)  col[stcl] = row;
+
+                                   col[1].k += 1;
+                    col[2].j -= 1;               
+                    col[3].i -= 1; col[4].i += 1;
+
+                    values[0] = Cd + Cz + Cy;
+                                    values[1] = Cz;
+                    values[2] = Cy;                
+                    values[3] = Cx; values[4] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 5, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (k == 0 && i == 0)
+                {
+                    MatStencil      col[5];
+                    PetscScalar     values[5];
+
+                    for (int stcl=0; stcl<5; stcl++)  col[stcl] = row;
+
+                                   col[1].k += 1;
+                    col[2].j -= 1; col[3].j += 1;
+                                   col[4].i += 1;
+
+                    values[0] = Cd + Cz + Cx;
+                                    values[1] = Cz;
+                    values[2] = Cy; values[3] = Cy;
+                                    values[4] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 5, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (k == 0 && i == Nx-1)
+                {
+                    MatStencil      col[5];
+                    PetscScalar     values[5];
+
+                    for (int stcl=0; stcl<5; stcl++)  col[stcl] = row;
+
+                                   col[1].k += 1;
+                    col[2].j -= 1; col[3].j += 1;
+                    col[4].i -= 1;               
+
+                    values[0] = Cd + Cz + Cx;
+                                    values[1] = Cz;
+                    values[2] = Cy; values[3] = Cy;
+                    values[4] = Cx;                
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 5, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (k == Nz-1 && j == 0)
+                {
+                    MatStencil      col[5];
+                    PetscScalar     values[5];
+
+                    for (int stcl=0; stcl<5; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1; 
+                                   col[2].j += 1;
+                    col[3].i -= 1; col[4].i += 1;
+
+                    values[0] = Cd + Cz + Cy;
+                    values[1] = Cz;                
+                                    values[2] = Cy;
+                    values[3] = Cx; values[4] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 5, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (k == Nz-1 && j == Ny-1)
+                {
+                    MatStencil      col[5];
+                    PetscScalar     values[5];
+
+                    for (int stcl=0; stcl<5; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1;               
+                    col[2].j -= 1;               
+                    col[3].i -= 1; col[4].i += 1;
+
+                    values[0] = Cd + Cz + Cy;
+                    values[1] = Cz; 
+                    values[2] = Cy; 
+                    values[3] = Cx; values[4] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 5, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (k == Nz-1 && i == 0)
+                {
+                    MatStencil      col[5];
+                    PetscScalar     values[5];
+
+                    for (int stcl=0; stcl<5; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1;               
+                    col[2].j -= 1; col[3].j += 1;
+                                   col[4].i += 1;
+
+                    values[0] = Cd + Cz + Cx;
+                    values[1] = Cz;                
+                    values[2] = Cy; values[3] = Cy;
+                                  ; values[4] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 5, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (k == Nz-1 && i == Nx-1)
+                {
+                    MatStencil      col[5];
+                    PetscScalar     values[5];
+
+                    for (int stcl=0; stcl<5; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1;               
+                    col[2].j -= 1; col[3].j += 1;
+                    col[4].i -= 1;               
+
+                    values[0] = Cd + Cz + Cx;
+                    values[1] = Cz;                
+                    values[2] = Cy; values[3] = Cy;
+                    values[4] = Cx;                
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 5, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (j == 0 && i == 0)
+                {
+                    MatStencil      col[5];
+                    PetscScalar     values[5];
+
+                    for (int stcl=0; stcl<5; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1; col[2].k += 1;
+                                   col[3].j += 1;
+                                   col[4].i += 1;
+
+                    values[0] = Cd + Cy + Cx;
+                    values[1] = Cz; values[2] = Cz;
+                                    values[3] = Cy;
+                                    values[4] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 5, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (j == 0 && i == Nx-1)
+                {
+                    MatStencil      col[5];
+                    PetscScalar     values[5];
+
+                    for (int stcl=0; stcl<5; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1; col[2].k += 1;
+                                   col[3].j += 1;
+                    col[4].i -= 1;               
+
+                    values[0] = Cd + Cy + Cx;
+                    values[1] = Cz; values[2] = Cz;
+                                    values[3] = Cy;
+                    values[4] = Cx;                
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 5, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (j == Ny-1 && i == 0)
+                {
+                    MatStencil      col[5];
+                    PetscScalar     values[5];
+
+                    for (int stcl=0; stcl<5; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1; col[2].k += 1;
+                    col[3].j -= 1;               
+                                   col[4].i += 1;
+
+                    values[0] = Cd + Cy + Cx;
+                    values[1] = Cz; values[2] = Cz;
+                    values[3] = Cy;                
+                                    values[4] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 5, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (j == Ny-1 && i == Nx-1)
+                {
+                    MatStencil      col[5];
+                    PetscScalar     values[5];
+
+                    for (int stcl=0; stcl<5; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1; col[2].k += 1;
+                    col[3].j -= 1;               
+                    col[4].i -= 1;               
+
+                    values[0] = Cd + Cy + Cx;
+                    values[1] = Cz; values[2] = Cz;
+                    values[3] = Cy;                
+                    values[4] = Cx;                
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 5, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+
+                // Faces
+                else if (k == 0) // bottom face
+                {
+                    MatStencil      col[6];
+                    PetscScalar     values[6];
+
+                    for (int stcl=0; stcl<6; stcl++)  col[stcl] = row;
+
+                                   col[1].k += 1;
+                    col[2].j -= 1; col[3].j += 1;
+                    col[4].i -= 1; col[5].i += 1;
+
+                    values[0] = Cd + Cz;
+                                  ; values[1] = Cz;
+                    values[2] = Cy; values[3] = Cy;
+                    values[4] = Cx; values[5] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 6, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (k == Nz-1) // top face
+                {
+                    MatStencil      col[6];
+                    PetscScalar     values[6];
+
+                    for (int stcl=0; stcl<6; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1;               
+                    col[2].j -= 1; col[3].j += 1;
+                    col[4].i -= 1; col[5].i += 1;
+
+                    values[0] = Cd + Cz;
+                    values[1] = Cz;                
+                    values[2] = Cy; values[3] = Cy;
+                    values[4] = Cx; values[5] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 6, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (j == 0) // front face
+                {
+                    MatStencil      col[6];
+                    PetscScalar     values[6];
+
+                    for (int stcl=0; stcl<6; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1; col[2].k += 1;
+                                   col[3].j += 1;
+                    col[4].i -= 1; col[5].i += 1;
+
+                    values[0] = Cd + Cy;
+                    values[1] = Cz; values[2] = Cz;
+                                    values[3] = Cy;
+                    values[4] = Cx; values[5] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 6, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (j == Ny-1) // rear face
+                {
+                    MatStencil      col[6];
+                    PetscScalar     values[6];
+
+                    for (int stcl=0; stcl<6; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1; col[2].k += 1;
+                    col[3].j -= 1; 
+                    col[4].i -= 1; col[5].i += 1;
+
+                    values[0] = Cd + Cy;
+                    values[1] = Cz; values[2] = Cz;
+                    values[3] = Cy; 
+                    values[4] = Cx; values[5] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 6, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (i == 0) // left face
+                {
+                    MatStencil      col[6];
+                    PetscScalar     values[6];
+
+                    for (int stcl=0; stcl<6; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1; col[2].k += 1;
+                    col[3].j -= 1; col[4].j += 1;
+                                   col[5].i += 1;
+
+                    values[0] = Cd + Cx;
+                    values[1] = Cz; values[2] = Cz;
+                    values[3] = Cy; values[4] = Cy;
+                                    values[5] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 6, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+                else if (i == Nx-1) //right face
+                {
+                    MatStencil      col[6];
+                    PetscScalar     values[6];
+
+                    for (int stcl=0; stcl<6; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1; col[2].k += 1;
+                    col[3].j -= 1; col[4].j += 1;
+                    col[5].i -= 1;               
+
+                    values[0] = Cd + Cx;
+                    values[1] = Cz; values[2] = Cz;
+                    values[3] = Cy; values[4] = Cy;
+                    values[5] = Cx;                
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 6, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+
+                // Interior
+                else
+                {
+                    MatStencil      col[7];
+                    PetscScalar     values[7];
+
+                    for (int stcl=0; stcl<7; stcl++)  col[stcl] = row;
+
+                    col[1].k -= 1; col[2].k += 1;
+                    col[3].j -= 1; col[4].j += 1;
+                    col[5].i -= 1; col[6].i += 1;
+
+                    values[0] = Cd;
+                    values[1] = Cz; values[2] = Cz;
+                    values[3] = Cy; values[4] = Cy;
+                    values[5] = Cx; values[6] = Cx;
+               
+                    ierr = MatSetValuesStencil(
+                        A, 1, &row, 7, col, values, INSERT_VALUES); CHKERRQ(ierr);
+                }
+            }
+        }
     }
 
-
-    ierr = MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY);               CHKERRQ(ierr);
-    ierr = MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY);                 CHKERRQ(ierr);
+    ierr = MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY);                CHKERRQ(ierr);
+    ierr = MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY);                  CHKERRQ(ierr);
 
     return 0;
 }

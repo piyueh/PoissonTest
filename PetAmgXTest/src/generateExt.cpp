@@ -1,36 +1,46 @@
 # include "headers.hpp"
 
 
-int generateExt(const int &Nx, const int &Ny, 
-        const Vec &x, const Vec &y, Vec &u)
+PetscErrorCode generateExt(const DM &grid, 
+        const Vec &x, const Vec &y, const Vec &z, Vec &exact)
 {
-    PetscInt            iBg, 
-                        iEd;
-    PetscScalar         v;
-    PetscScalar         *raw_x, 
-                        *raw_y;
     PetscErrorCode      ierr;   // error codes returned by PETSc routines
 
-    ierr = VecGetArray(x, &raw_x);                                CHKERRQ(ierr);
-    ierr = VecGetArray(y, &raw_y);                                CHKERRQ(ierr);
+    PetscInt            xbg, xed,
+                        ybg, yed,
+                        zbg, zed;
 
-    ierr = VecGetOwnershipRange(u, &iBg, &iEd);                   CHKERRQ(ierr);
+    PetscReal           ***x_arry,
+                        ***y_arry,
+                        ***z_arry,
+                        ***exact_arry;
 
-    for(int idx=iBg; idx<iEd; ++idx)
+
+    // get indices for left-bottom and right-top corner
+    ierr = DMDAGetCorners(grid, &xbg, &ybg, &zbg, &xed, &yed, &zed); CHKERRQ(ierr);
+
+    xed += xbg;
+    yed += ybg;
+    zed += zbg;
+
+    // generate rhs
+    ierr = DMDAVecGetArray(grid, x, &x_arry);                      CHKERRQ(ierr);
+    ierr = DMDAVecGetArray(grid, y, &y_arry);                      CHKERRQ(ierr);
+    ierr = DMDAVecGetArray(grid, z, &z_arry);                      CHKERRQ(ierr);
+    ierr = DMDAVecGetArray(grid, exact, &exact_arry);              CHKERRQ(ierr);
+    for(int k=zbg; k<zed; ++k)
     {
-        int             grid_i = idx % Nx,
-                        grid_j = idx / Nx;
-        
-        v = std::cos(c1 * raw_x[grid_i]) * std::cos(c1 * raw_y[grid_j]);
-        ierr = VecSetValue(u, idx, v, ADD_VALUES);                CHKERRQ(ierr);
+        for(int j=ybg; j<yed; ++j)
+        {
+            for(int i=xbg; i<xed; ++i)
+                exact_arry[k][j][i] = std::cos(c1 * x_arry[k][j][i]) * 
+                    std::cos(c1 * y_arry[k][j][i]) * std::cos(c1 * z_arry[k][j][i]);
+        }
     }
-    ierr = MPI_Barrier(PETSC_COMM_WORLD);                         CHKERRQ(ierr);
-
-    ierr = VecAssemblyBegin(u);                                   CHKERRQ(ierr);
-    ierr = VecAssemblyEnd(u);                                     CHKERRQ(ierr);
-
-    ierr = VecRestoreArray(x, &raw_x);                            CHKERRQ(ierr);
-    ierr = VecRestoreArray(y, &raw_y);                            CHKERRQ(ierr);
+    ierr = DMDAVecRestoreArray(grid, x, &x_arry);                  CHKERRQ(ierr);
+    ierr = DMDAVecRestoreArray(grid, y, &y_arry);                  CHKERRQ(ierr);
+    ierr = DMDAVecRestoreArray(grid, z, &z_arry);                  CHKERRQ(ierr);
+    ierr = DMDAVecRestoreArray(grid, exact, &exact_arry);          CHKERRQ(ierr);
 
     return 0;
 }
