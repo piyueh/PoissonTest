@@ -1,0 +1,30 @@
+#!/bin/bash
+
+#SBATCH --job-name="PetAmgX"
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=16
+#SBATCH --time=02:00:00
+#SBATCH --output=slurm-job-%j.out
+#SBATCH --error=slurm-job-%j.err
+#SBATCH --partition=short
+
+#module load openmpi/1.8/gcc/4.7/cuda
+#module load cuda/toolkit/6.5
+#module load boost
+#module load lapack/gcc
+#module load blas/gcc
+
+export LM_LICENSE_FILE=/opt/AmgX/amgx_trial-exp-Nov-01-2015.lic
+export LD_LIBRARY_PATH=/opt/AmgX/lib:/opt/PETSc/lib:/opt/cuda65/lib64:/usr/lib
+export PETAMGX_DIR=/home/pychuang/Dropbox/MyGit/PoissonTest/PetAmgXTest
+
+mpiexec -display-map -n 4 -map-by ppr:4:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 4CPU_Weak_Scaling_1 -platform CPU -Nx 10 -Ny 10 -Nz 10 -cfgFileName ${PETAMGX_DIR}/configFiles/solversPetscOptions.info -optFileName performance1.txt
+
+mpiexec -n 4 -map-by ppr:4:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 4CPU_Weak_Scaling_2 -platform CPU -Nx 20 -Ny 20 -Nz 20 -cfgFileName ${PETAMGX_DIR}/configFiles/solversPetscOptions.info -optFileName performance2.txt
+
+mpiexec -n 4 -map-by ppr:4:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 4CPU_Weak_Scaling_3 -platform CPU -Nx 40 -Ny 40 -Nz 40 -cfgFileName ${PETAMGX_DIR}/configFiles/solversPetscOptions.info -optFileName performance3.txt
+
+mpiexec -n 4 -map-by ppr:4:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 4CPU_Weak_Scaling_4 -platform CPU -Nx 80 -Ny 80 -Nz 80 -cfgFileName ${PETAMGX_DIR}/configFiles/solversPetscOptions.info -optFileName performance4.txt
+
+mpiexec -n 4 -map-by ppr:4:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 4CPU_Weak_Scaling_5 -platform CPU -Nx 160 -Ny 160 -Nz 160 -cfgFileName ${PETAMGX_DIR}/configFiles/solversPetscOptions.info -optFileName performance5.txt
+

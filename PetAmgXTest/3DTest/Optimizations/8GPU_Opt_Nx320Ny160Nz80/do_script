@@ -1,0 +1,84 @@
+#! /bin/bash
+
+cp V_PMIS_GS_1.0_4.info V_PMIS_GS_1.0_2.info
+cp F_PMIS_GS_1.0_4.info F_PMIS_GS_1.0_2.info
+cp V_HMIS_GS_1.0_4.info V_HMIS_GS_1.0_2.info
+cp F_HMIS_GS_1.0_4.info F_HMIS_GS_1.0_2.info
+
+sed -i 's/c_solver:max_iters=4/c_solver:max_iters=2/g' V_PMIS_GS_1.0_2.info
+sed -i 's/c_solver:max_iters=4/c_solver:max_iters=2/g' F_PMIS_GS_1.0_2.info
+sed -i 's/c_solver:max_iters=4/c_solver:max_iters=2/g' V_HMIS_GS_1.0_2.info
+sed -i 's/c_solver:max_iters=4/c_solver:max_iters=2/g' F_HMIS_GS_1.0_2.info
+
+cp V_PMIS_GS_1.0_4.info V_PMIS_GS_1.0_6.info
+cp F_PMIS_GS_1.0_4.info F_PMIS_GS_1.0_6.info
+cp V_HMIS_GS_1.0_4.info V_HMIS_GS_1.0_6.info
+cp F_HMIS_GS_1.0_4.info F_HMIS_GS_1.0_6.info
+
+sed -i 's/c_solver:max_iters=4/c_solver:max_iters=6/g' V_PMIS_GS_1.0_6.info
+sed -i 's/c_solver:max_iters=4/c_solver:max_iters=6/g' F_PMIS_GS_1.0_6.info
+sed -i 's/c_solver:max_iters=4/c_solver:max_iters=6/g' V_HMIS_GS_1.0_6.info
+sed -i 's/c_solver:max_iters=4/c_solver:max_iters=6/g' F_HMIS_GS_1.0_6.info
+
+cp V_PMIS_GS_1.0_4.info V_PMIS_GS_1.0_8.info
+cp F_PMIS_GS_1.0_4.info F_PMIS_GS_1.0_8.info
+cp V_HMIS_GS_1.0_4.info V_HMIS_GS_1.0_8.info
+cp F_HMIS_GS_1.0_4.info F_HMIS_GS_1.0_8.info
+
+sed -i 's/c_solver:max_iters=4/c_solver:max_iters=8/g' V_PMIS_GS_1.0_8.info
+sed -i 's/c_solver:max_iters=4/c_solver:max_iters=8/g' F_PMIS_GS_1.0_8.info
+sed -i 's/c_solver:max_iters=4/c_solver:max_iters=8/g' V_HMIS_GS_1.0_8.info
+sed -i 's/c_solver:max_iters=4/c_solver:max_iters=8/g' F_HMIS_GS_1.0_8.info
+
+cp V_PMIS_GS_1.0_4.info V_PMIS_GS_1.0_10.info
+cp F_PMIS_GS_1.0_4.info F_PMIS_GS_1.0_10.info
+cp V_HMIS_GS_1.0_4.info V_HMIS_GS_1.0_10.info
+cp F_HMIS_GS_1.0_4.info F_HMIS_GS_1.0_10.info
+
+sed -i 's/c_solver:max_iters=4/c_solver:max_iters=10/g' V_PMIS_GS_1.0_10.info
+sed -i 's/c_solver:max_iters=4/c_solver:max_iters=10/g' F_PMIS_GS_1.0_10.info
+sed -i 's/c_solver:max_iters=4/c_solver:max_iters=10/g' V_HMIS_GS_1.0_10.info
+sed -i 's/c_solver:max_iters=4/c_solver:max_iters=10/g' F_HMIS_GS_1.0_10.info
+
+for((i=9; i>0; --i));
+do
+	cp V_PMIS_GS_0.${i}_4.info V_PMIS_GS_0.${i}_2.info;
+	cp F_PMIS_GS_0.${i}_4.info F_PMIS_GS_0.${i}_2.info;
+	cp V_HMIS_GS_0.${i}_4.info V_HMIS_GS_0.${i}_2.info;
+	cp F_HMIS_GS_0.${i}_4.info F_HMIS_GS_0.${i}_2.info;
+
+	sed -i 's/c_solver:max_iters=4/c_solver:max_iters=2/g' V_PMIS_GS_0.${i}_2.info;
+	sed -i 's/c_solver:max_iters=4/c_solver:max_iters=2/g' F_PMIS_GS_0.${i}_2.info;
+	sed -i 's/c_solver:max_iters=4/c_solver:max_iters=2/g' V_HMIS_GS_0.${i}_2.info;
+	sed -i 's/c_solver:max_iters=4/c_solver:max_iters=2/g' F_HMIS_GS_0.${i}_2.info;
+
+	cp V_PMIS_GS_0.${i}_4.info V_PMIS_GS_0.${i}_6.info;
+	cp F_PMIS_GS_0.${i}_4.info F_PMIS_GS_0.${i}_6.info;
+	cp V_HMIS_GS_0.${i}_4.info V_HMIS_GS_0.${i}_6.info;
+	cp F_HMIS_GS_0.${i}_4.info F_HMIS_GS_0.${i}_6.info;
+
+	sed -i 's/c_solver:max_iters=4/c_solver:max_iters=6/g' V_PMIS_GS_0.${i}_6.info;
+	sed -i 's/c_solver:max_iters=4/c_solver:max_iters=6/g' F_PMIS_GS_0.${i}_6.info;
+	sed -i 's/c_solver:max_iters=4/c_solver:max_iters=6/g' V_HMIS_GS_0.${i}_6.info;
+	sed -i 's/c_solver:max_iters=4/c_solver:max_iters=6/g' F_HMIS_GS_0.${i}_6.info;
+
+	cp V_PMIS_GS_0.${i}_4.info V_PMIS_GS_0.${i}_8.info;
+	cp F_PMIS_GS_0.${i}_4.info F_PMIS_GS_0.${i}_8.info;
+	cp V_HMIS_GS_0.${i}_4.info V_HMIS_GS_0.${i}_8.info;
+	cp F_HMIS_GS_0.${i}_4.info F_HMIS_GS_0.${i}_8.info;
+
+	sed -i 's/c_solver:max_iters=4/c_solver:max_iters=8/g' V_PMIS_GS_0.${i}_8.info;
+	sed -i 's/c_solver:max_iters=4/c_solver:max_iters=8/g' F_PMIS_GS_0.${i}_8.info;
+	sed -i 's/c_solver:max_iters=4/c_solver:max_iters=8/g' V_HMIS_GS_0.${i}_8.info;
+	sed -i 's/c_solver:max_iters=4/c_solver:max_iters=8/g' F_HMIS_GS_0.${i}_8.info;
+
+	cp V_PMIS_GS_0.${i}_4.info V_PMIS_GS_0.${i}_10.info;
+	cp F_PMIS_GS_0.${i}_4.info F_PMIS_GS_0.${i}_10.info;
+	cp V_HMIS_GS_0.${i}_4.info V_HMIS_GS_0.${i}_10.info;
+	cp F_HMIS_GS_0.${i}_4.info F_HMIS_GS_0.${i}_10.info;
+
+	sed -i 's/c_solver:max_iters=4/c_solver:max_iters=10/g' V_PMIS_GS_0.${i}_10.info;
+	sed -i 's/c_solver:max_iters=4/c_solver:max_iters=10/g' F_PMIS_GS_0.${i}_10.info;
+	sed -i 's/c_solver:max_iters=4/c_solver:max_iters=10/g' V_HMIS_GS_0.${i}_10.info;
+	sed -i 's/c_solver:max_iters=4/c_solver:max_iters=10/g' F_HMIS_GS_0.${i}_10.info;
+done;

@@ -1,0 +1,28 @@
+import os
+import numpy
+
+#case = ["1GPU_Opt_NxNyNz160",
+#        "2GPU_Opt_NxNyNz160",
+#        "4GPU_Opt_NxNyNz160",
+#        "8GPU_Opt_NxNyNz160",
+#        "16GPU_Opt_NxNyNz160",
+#        "1GPU_Opt_Nx320Ny160Nz80",
+#        "2GPU_Opt_Nx320Ny160Nz80",
+#        "4GPU_Opt_Nx320Ny160Nz80",
+#        "8GPU_Opt_Nx320Ny160Nz80",
+#        "16GPU_Opt_Nx320Ny160Nz80"]
+
+cases = ["1GPU_Opt_NxNyNz160"]
+
+slurmFiles = {case:[] for case in cases}
+runCount = {case:{} for case in cases}
+wallTime = {case:{} for case in cases}
+
+for case in cases:
+    for root, dirs, files in os.walk(case):
+        for file in files:
+            if file.endswith(".out") and file.find("slurm") != -1:
+                slurmFlies[case].append(file)
+
+print(slurmFiles)
+

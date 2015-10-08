@@ -1,0 +1,311 @@
+#!/bin/bash
+
+#SBATCH --job-name="PetAmgX"
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=2
+#SBATCH --time=04:00:00
+#SBATCH --output=slurm-job-%j.out
+#SBATCH --error=slurm-job-%j.err
+#SBATCH --partition=ivygpu-noecc
+
+module load openmpi/1.8/gcc/4.7/cuda
+module load cuda/toolkit/6.5
+module load boost
+module load lapack/gcc
+module load blas/gcc
+
+export LM_LICENSE_FILE=/home/pychuang/myPackages/AmgX/amgx_trial-exp-Nov-01-2015.lic
+export LD_LIBRARY_PATH=/home/pychuang/myPackages/AmgX/lib:$LD_LIBRARY_PATH
+export PETAMGX_DIR=/home/pychuang/PetAmgXTest
+
+nvidia-smi
+
+echo "========================================================================"
+echo "========================================================================"
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_1.0_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_1.0_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.9_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.9_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.8_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.8_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.7_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.7_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.6_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.6_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.5_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.5_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.4_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.4_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.3_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.3_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.2_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.2_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.1_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.1_2.info -optFileName pert.txt
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_1.0_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_1.0_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.9_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.9_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.8_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.8_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.7_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.7_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.6_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.6_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.5_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.5_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.4_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.4_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.3_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.3_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.2_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.2_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.1_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.1_4.info -optFileName pert.txt
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_1.0_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_1.0_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.9_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.9_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.8_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.8_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.7_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.7_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.6_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.6_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.5_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.5_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.4_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.4_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.3_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.3_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.2_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.2_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.1_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.1_6.info -optFileName pert.txt
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_1.0_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_1.0_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.9_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.9_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.8_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.8_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.7_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.7_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.6_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.6_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.5_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.5_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.4_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.4_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.3_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.3_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.2_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.2_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.1_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.1_8.info -optFileName pert.txt
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_1.0_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_1.0_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.9_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.9_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.8_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.8_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.7_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.7_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.6_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.6_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.5_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.5_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.4_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.4_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.3_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.3_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.2_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.2_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_GS_0.1_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_GS_0.1_10.info -optFileName pert.txt
+
+echo "========================================================================"
+echo "========================================================================"
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_1.0_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_1.0_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.9_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.9_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.8_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.8_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.7_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.7_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.6_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.6_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.5_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.5_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.4_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.4_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.3_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.3_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.2_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.2_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.1_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.1_2.info -optFileName pert.txt
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_1.0_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_1.0_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.9_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.9_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.8_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.8_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.7_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.7_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.6_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.6_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.5_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.5_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.4_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.4_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.3_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.3_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.2_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.2_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.1_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.1_4.info -optFileName pert.txt
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_1.0_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_1.0_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.9_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.9_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.8_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.8_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.7_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.7_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.6_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.6_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.5_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.5_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.4_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.4_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.3_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.3_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.2_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.2_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.1_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.1_6.info -optFileName pert.txt
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_1.0_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_1.0_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.9_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.9_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.8_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.8_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.7_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.7_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.6_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.6_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.5_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.5_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.4_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.4_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.3_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.3_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.2_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.2_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.1_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.1_8.info -optFileName pert.txt
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_1.0_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_1.0_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.9_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.9_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.8_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.8_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.7_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.7_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.6_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.6_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.5_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.5_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.4_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.4_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.3_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.3_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.2_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.2_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_GS_0.1_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_GS_0.1_10.info -optFileName pert.txt
+
+echo "========================================================================"
+echo "========================================================================"
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_LU_1.0 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_LU_1.0.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_LU_0.9 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_LU_0.9.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_LU_0.8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_LU_0.8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_LU_0.7 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_LU_0.7.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_LU_0.6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_LU_0.6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_LU_0.5 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_LU_0.5.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_LU_0.4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_LU_0.4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_LU_0.3 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_LU_0.3.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_LU_0.2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_LU_0.2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_PMIS_LU_0.1 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_PMIS_LU_0.1.info -optFileName pert.txt
+
+echo "========================================================================"
+echo "========================================================================"
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_LU_1.0 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_LU_1.0.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_LU_0.9 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_LU_0.9.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_LU_0.8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_LU_0.8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_LU_0.7 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_LU_0.7.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_LU_0.6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_LU_0.6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_LU_0.5 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_LU_0.5.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_LU_0.4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_LU_0.4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_LU_0.3 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_LU_0.3.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_LU_0.2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_LU_0.2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_PMIS_LU_0.1 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_PMIS_LU_0.1.info -optFileName pert.txt
+
+
+echo "========================================================================"
+echo "========================================================================"
+
+
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_1.0_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_1.0_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.9_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.9_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.8_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.8_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.7_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.7_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.6_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.6_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.5_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.5_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.4_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.4_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.3_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.3_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.2_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.2_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.1_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.1_2.info -optFileName pert.txt
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_1.0_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_1.0_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.9_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.9_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.8_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.8_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.7_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.7_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.6_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.6_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.5_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.5_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.4_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.4_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.3_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.3_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.2_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.2_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.1_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.1_4.info -optFileName pert.txt
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_1.0_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_1.0_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.9_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.9_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.8_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.8_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.7_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.7_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.6_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.6_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.5_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.5_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.4_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.4_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.3_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.3_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.2_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.2_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.1_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.1_6.info -optFileName pert.txt
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_1.0_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_1.0_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.9_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.9_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.8_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.8_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.7_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.7_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.6_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.6_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.5_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.5_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.4_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.4_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.3_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.3_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.2_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.2_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.1_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.1_8.info -optFileName pert.txt
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_1.0_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_1.0_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.9_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.9_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.8_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.8_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.7_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.7_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.6_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.6_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.5_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.5_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.4_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.4_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.3_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.3_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.2_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.2_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_GS_0.1_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_GS_0.1_10.info -optFileName pert.txt
+
+echo "========================================================================"
+echo "========================================================================"
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_1.0_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_1.0_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.9_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.9_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.8_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.8_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.7_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.7_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.6_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.6_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.5_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.5_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.4_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.4_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.3_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.3_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.2_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.2_2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.1_2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.1_2.info -optFileName pert.txt
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_1.0_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_1.0_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.9_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.9_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.8_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.8_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.7_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.7_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.6_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.6_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.5_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.5_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.4_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.4_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.3_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.3_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.2_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.2_4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.1_4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.1_4.info -optFileName pert.txt
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_1.0_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_1.0_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.9_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.9_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.8_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.8_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.7_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.7_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.6_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.6_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.5_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.5_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.4_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.4_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.3_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.3_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.2_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.2_6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.1_6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.1_6.info -optFileName pert.txt
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_1.0_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_1.0_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.9_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.9_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.8_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.8_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.7_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.7_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.6_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.6_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.5_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.5_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.4_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.4_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.3_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.3_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.2_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.2_8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.1_8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.1_8.info -optFileName pert.txt
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_1.0_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_1.0_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.9_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.9_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.8_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.8_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.7_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.7_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.6_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.6_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.5_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.5_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.4_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.4_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.3_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.3_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.2_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.2_10.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_GS_0.1_10 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_GS_0.1_10.info -optFileName pert.txt
+
+echo "========================================================================"
+echo "========================================================================"
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_LU_1.0 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_LU_1.0.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_LU_0.9 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_LU_0.9.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_LU_0.8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_LU_0.8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_LU_0.7 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_LU_0.7.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_LU_0.6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_LU_0.6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_LU_0.5 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_LU_0.5.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_LU_0.4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_LU_0.4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_LU_0.3 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_LU_0.3.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_LU_0.2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_LU_0.2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName V_HMIS_LU_0.1 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName V_HMIS_LU_0.1.info -optFileName pert.txt
+
+echo "========================================================================"
+echo "========================================================================"
+
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_LU_1.0 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_LU_1.0.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_LU_0.9 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_LU_0.9.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_LU_0.8 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_LU_0.8.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_LU_0.7 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_LU_0.7.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_LU_0.6 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_LU_0.6.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_LU_0.5 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_LU_0.5.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_LU_0.4 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_LU_0.4.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_LU_0.3 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_LU_0.3.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_LU_0.2 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_LU_0.2.info -optFileName pert.txt
+mpiexec -n 2 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName F_HMIS_LU_0.1 -platform GPU -Nx 320 -Ny 160 -Nz 80 -cfgFileName F_HMIS_LU_0.1.info -optFileName pert.txt

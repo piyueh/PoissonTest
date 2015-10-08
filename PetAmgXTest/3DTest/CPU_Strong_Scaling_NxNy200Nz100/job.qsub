@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#SBATCH --job-name="PetAmgX"
+#SBATCH --nodes=8
+#SBATCH --ntasks-per-node=12
+#SBATCH --time=01:00:00
+#SBATCH --output=slurm-job-%j.out
+#SBATCH --error=slurm-job-%j.err
+#SBATCH --partition=ivygpu-noecc
+
+module load openmpi/1.8/gcc/4.7/cuda
+module load cuda/toolkit/6.5
+module load boost
+module load lapack/gcc
+module load blas/gcc
+
+export LM_LICENSE_FILE=/home/pychuang/myPackages/AmgX/amgx_trial-exp-Nov-01-2015.lic
+export LD_LIBRARY_PATH=/home/pychuang/myPackages/AmgX/lib:$LD_LIBRARY_PATH
+export PETAMGX_DIR=/home/pychuang/PetAmgXTest
+
+nvidia-smi
+
+mpiexec -display-map -n 12 -map-by ppr:12:node ${PETAMGX_DIR}/bin/PetAmgX -caseName CPU_Strong_Scaling_NxNy200Nz100_1 -platform CPU -Nx 200 -Ny 200 -Nz 100 -cfgFileName ${PETAMGX_DIR}/configFiles/solversPetscOptions.info -optFileName performance1.txt
+
+mpiexec -n 24 -map-by ppr:12:node ${PETAMGX_DIR}/bin/PetAmgX -caseName CPU_Strong_Scaling_NxNy200Nz100_2 -platform CPU -Nx 200 -Ny 200 -Nz 100 -cfgFileName ${PETAMGX_DIR}/configFiles/solversPetscOptions.info -optFileName performance2.txt
+
+mpiexec -n 36 -map-by ppr:12:node ${PETAMGX_DIR}/bin/PetAmgX -caseName CPU_Strong_Scaling_NxNy200Nz100_3 -platform CPU -Nx 200 -Ny 200 -Nz 100 -cfgFileName ${PETAMGX_DIR}/configFiles/solversPetscOptions.info -optFileName performance3.txt
+
+mpiexec -n 48 -map-by ppr:12:node ${PETAMGX_DIR}/bin/PetAmgX -caseName CPU_Strong_Scaling_NxNy200Nz100_4 -platform CPU -Nx 200 -Ny 200 -Nz 100 -cfgFileName ${PETAMGX_DIR}/configFiles/solversPetscOptions.info -optFileName performance4.txt
+
+mpiexec -n 60 -map-by ppr:12:node ${PETAMGX_DIR}/bin/PetAmgX -caseName CPU_Strong_Scaling_NxNy200Nz100_5 -platform CPU -Nx 200 -Ny 200 -Nz 100 -cfgFileName ${PETAMGX_DIR}/configFiles/solversPetscOptions.info -optFileName performance5.txt
+
+mpiexec -n 72 -map-by ppr:12:node ${PETAMGX_DIR}/bin/PetAmgX -caseName CPU_Strong_Scaling_NxNy200Nz100_6 -platform CPU -Nx 200 -Ny 200 -Nz 100 -cfgFileName ${PETAMGX_DIR}/configFiles/solversPetscOptions.info -optFileName performance6.txt
+
+mpiexec -n 84 -map-by ppr:12:node ${PETAMGX_DIR}/bin/PetAmgX -caseName CPU_Strong_Scaling_NxNy200Nz100_7 -platform CPU -Nx 200 -Ny 200 -Nz 100 -cfgFileName ${PETAMGX_DIR}/configFiles/solversPetscOptions.info -optFileName performance7.txt
+
+mpiexec -n 96 -map-by ppr:12:node ${PETAMGX_DIR}/bin/PetAmgX -caseName CPU_Strong_Scaling_NxNy200Nz100_8 -platform CPU -Nx 200 -Ny 200 -Nz 100 -cfgFileName ${PETAMGX_DIR}/configFiles/solversPetscOptions.info -optFileName performance8.txt
