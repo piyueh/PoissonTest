@@ -1,22 +1,23 @@
 import os
 import numpy
 
-#cases = ["1GPU_Opt_NxNyNz160",
-#        "2GPU_Opt_NxNyNz160",
-#        "4GPU_Opt_NxNyNz160",
-#        "8GPU_Opt_NxNyNz160",
-#        "16GPU_Opt_NxNyNz160",
-#        "1GPU_Opt_Nx320Ny160Nz80",
-#        "2GPU_Opt_Nx320Ny160Nz80",
-#        "4GPU_Opt_Nx320Ny160Nz80",
-#        "8GPU_Opt_Nx320Ny160Nz80",
-#        "16GPU_Opt_Nx320Ny160Nz80"]
-
 cases = ["1GPU_Opt_NxNyNz160",
         "2GPU_Opt_NxNyNz160",
         "4GPU_Opt_NxNyNz160",
         "8GPU_Opt_NxNyNz160",
-        "16GPU_Opt_NxNyNz160"]
+        "16GPU_Opt_NxNyNz160",
+        "1GPU_Opt_Nx320Ny160Nz80",
+        "2GPU_Opt_Nx320Ny160Nz80",
+        "4GPU_Opt_Nx320Ny160Nz80",
+        "8GPU_Opt_Nx320Ny160Nz80",
+        "16GPU_Opt_Nx320Ny160Nz80",
+        "1GPU_Opt_NxNyNz160_K40"]
+
+#cases = ["1GPU_Opt_NxNyNz160",
+#        "2GPU_Opt_NxNyNz160",
+#        "4GPU_Opt_NxNyNz160",
+#        "8GPU_Opt_NxNyNz160",
+#        "16GPU_Opt_NxNyNz160"]
 #cases = ["1GPU_Opt_NxNyNz160"]
 
 slurmFiles = {case:[] for case in cases}
@@ -61,4 +62,6 @@ for case in cases:
     bestSubCase[case] = min(wallTime[case], key=wallTime[case].get)
 
 for case in cases:
-    print(case, ": ", bestSubCase[case], " ", wallTime[case][bestSubCase[case]], " sec")
+    print(case, ": ", bestSubCase[case], " ", 
+            wallTime[case][bestSubCase[case]], " sec ",
+            runCount[case][bestSubCase[case]], " runs")

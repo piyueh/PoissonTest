@@ -4,14 +4,14 @@
 
 ---------------------------------------------- PETSc Performance Summary: ----------------------------------------------
 
-/home/pychuang/PetAmgXTest/bin/PetAmgX on a arch-linux2-c-opt named node341 with 16 processors, by pychuang Thu Oct  8 03:19:47 2015
+/home/pychuang/PetAmgXTest/bin/PetAmgX on a arch-linux2-c-opt named node341 with 16 processors, by pychuang Thu Oct  8 09:51:27 2015
 Using Petsc Development GIT revision: unknown  GIT Date: unknown
 
                          Max       Max/Min        Avg      Total 
-Time (sec):           8.384e+00      1.00348   8.357e+00
+Time (sec):           8.414e+00      1.00017   8.413e+00
 Objects:              3.100e+01      1.00000   3.100e+01
 Flops:                1.024e+06      1.00000   1.024e+06  1.638e+07
-Flops/sec:            1.226e+05      1.00348   1.225e+05  1.960e+06
+Flops/sec:            1.217e+05      1.00017   1.217e+05  1.948e+06
 MPI Messages:         1.600e+01      1.33333   1.400e+01  2.240e+02
 MPI Message Lengths:  1.536e+05      1.49996   9.145e+03  2.048e+06
 MPI Reductions:       4.600e+01      1.00000
@@ -22,8 +22,8 @@ Flop counting convention: 1 flop = 1 real number operation of type (multiply/div
 
 Summary of Stages:   ----- Time ------  ----- Flops -----  --- Messages ---  -- Message Lengths --  -- Reductions --
                         Avg     %Total     Avg     %Total   counts   %Total     Avg         %Total   counts   %Total 
- 0:      Main Stage: 6.4875e+00  77.6%  1.6384e+07 100.0%  2.240e+02 100.0%  9.145e+03      100.0%  4.500e+01  97.8% 
- 1:         solving: 1.8697e+00  22.4%  0.0000e+00   0.0%  0.000e+00   0.0%  0.000e+00        0.0%  0.000e+00   0.0% 
+ 0:      Main Stage: 6.5055e+00  77.3%  1.6384e+07 100.0%  2.240e+02 100.0%  9.145e+03      100.0%  4.500e+01  97.8% 
+ 1:         solving: 1.9070e+00  22.7%  0.0000e+00   0.0%  0.000e+00   0.0%  0.000e+00        0.0%  0.000e+00   0.0% 
 
 ------------------------------------------------------------------------------------------------------------------------
 See the 'Profiling' chapter of the users' manual for details on interpreting output.
@@ -47,17 +47,17 @@ Event                Count      Time (sec)     Flops                            
 
 --- Event Stage 0: Main Stage
 
-BuildTwoSidedF         1 1.0 4.8280e-02 1.9 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   1  0  0  0  0     0
-VecNorm                2 1.0 1.0841e-03 1.0 5.12e+05 1.0 0.0e+00 0.0e+00 2.0e+00  0 50  0  0  4   0 50  0  0  4  7557
-VecSet                 3 1.0 1.5660e-02 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0
-VecAXPY                1 1.0 5.1808e-04 1.0 5.12e+05 1.0 0.0e+00 0.0e+00 0.0e+00  0 50  0  0  0   0 50  0  0  0 15812
-VecAssemblyBegin       1 1.0 4.8301e-02 1.9 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   1  0  0  0  0     0
-VecAssemblyEnd         1 1.0 4.0531e-06 2.1 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0
-VecScatterBegin        1 1.0 1.9237e-02 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 1.0e+00  0  0  0  0  2   0  0  0  0  2     0
-MatAssemblyBegin       3 1.0 4.8151e-03 6.1 0.00e+00 0.0 0.0e+00 0.0e+00 4.0e+00  0  0  0  0  9   0  0  0  0  9     0
-MatAssemblyEnd         3 1.0 4.1173e-02 1.0 0.00e+00 0.0 1.1e+02 9.1e+03 8.0e+00  0  0 50 50 17   1  0 50 50 18     0
-MatGetRowIJ            1 1.0 7.1526e-06 2.5 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0
-MatGetLocalMat         1 1.0 2.6460e-02 1.1 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0
+BuildTwoSidedF         1 1.0 4.8694e-02 1.9 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   1  0  0  0  0     0
+VecNorm                2 1.0 1.2751e-03 1.2 5.12e+05 1.0 0.0e+00 0.0e+00 2.0e+00  0 50  0  0  4   0 50  0  0  4  6425
+VecSet                 3 1.0 1.5824e-02 1.1 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0
+VecAXPY                1 1.0 5.2214e-04 1.0 5.12e+05 1.0 0.0e+00 0.0e+00 0.0e+00  0 50  0  0  0   0 50  0  0  0 15689
+VecAssemblyBegin       1 1.0 4.8721e-02 1.9 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   1  0  0  0  0     0
+VecAssemblyEnd         1 1.0 3.0994e-06 3.2 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0
+VecScatterBegin        1 1.0 2.0525e-02 1.1 0.00e+00 0.0 0.0e+00 0.0e+00 1.0e+00  0  0  0  0  2   0  0  0  0  2     0
+MatAssemblyBegin       3 1.0 8.9889e-0311.6 0.00e+00 0.0 0.0e+00 0.0e+00 4.0e+00  0  0  0  0  9   0  0  0  0  9     0
+MatAssemblyEnd         3 1.0 4.1346e-02 1.0 0.00e+00 0.0 1.1e+02 9.1e+03 8.0e+00  0  0 50 50 17   1  0 50 50 18     0
+MatGetRowIJ            1 1.0 6.9141e-06 2.4 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0
+MatGetLocalMat         1 1.0 2.6482e-02 1.1 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0
 
 --- Event Stage 1: solving
 
@@ -83,9 +83,9 @@ Star Forest Bipartite Graph     2              0            0     0
 --- Event Stage 1: solving
 
 ========================================================================================================================
-Average time to get PetscTime(): 1.19209e-07
-Average time for MPI_Barrier(): 8.7738e-06
-Average time for zero size MPI_Send(): 4.73857e-06
+Average time to get PetscTime(): 9.53674e-08
+Average time for MPI_Barrier(): 9.20296e-06
+Average time for zero size MPI_Send(): 4.69387e-06
 #PETSc Option Table entries:
 -Nx 160
 -Ny 160

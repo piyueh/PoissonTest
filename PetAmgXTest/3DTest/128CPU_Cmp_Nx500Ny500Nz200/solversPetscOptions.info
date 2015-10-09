@@ -1,0 +1,12 @@
+# solversPetscOptions.info
+
+# Velocity solver: prefix `-velocity_`
+
+# Poisson solver: prefix `-poisson_`
+#-ksp_monitor
+-ksp_rtol 1e-14
+-ksp_atol 1e-8
+-pc_type gamg
+-pc_gamg_type agg
+-pc_gamg_agg_nsmooths 1
+-pc_gamg_threshold 0.8

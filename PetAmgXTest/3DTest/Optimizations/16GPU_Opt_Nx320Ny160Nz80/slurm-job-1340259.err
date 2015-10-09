@@ -1,0 +1,4 @@
+srun: error: Unable to create job step: Job/step already completing or completed
+srun: error: SLURM job 1340259 has expired.
+srun: Check SLURM_JOB_ID environment variable for expired or invalid job.
+slurmstepd: *** JOB 1340259 ON node341 CANCELLED AT 2015-10-08T07:20:40 DUE TO TIME LIMIT ***

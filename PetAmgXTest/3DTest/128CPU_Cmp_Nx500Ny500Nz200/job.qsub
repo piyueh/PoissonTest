@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#SBATCH --job-name="PetAmgX"
+#SBATCH --nodes=16
+#SBATCH --ntasks-per-node=16
+#SBATCH --time=01:00:00
+#SBATCH --output=slurm-job-%j.out
+#SBATCH --error=slurm-job-%j.err
+#SBATCH --partition=short
+
+module load openmpi/1.8/gcc/4.7/cuda
+module load cuda/toolkit/6.5
+module load boost
+module load lapack/gcc
+module load blas/gcc
+
+export LM_LICENSE_FILE=/home/pychuang/myPackages/AmgX/amgx_trial-exp-Nov-01-2015.lic
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/pychuang/myPackages/AmgX/lib:/home/pychuang/myPackages/lib
+export PETAMGX_DIR=/home/pychuang/PetAmgXTest
+
+mpiexec -display-map -n 128 -map-by ppr:16:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 128CPU_Cmp_NxNy500Nz200 -platform CPU -Nx 500 -Ny 500 -Nz 200 -cfgFileName solversPetscOptions.info -optFileName perf.txt
+mpiexec -display-map -n 128 -map-by ppr:16:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 128CPU_Cmp_Nx1000Ny500Nz200 -platform CPU -Nx 1000 -Ny 500 -Nz 200 -cfgFileName solversPetscOptions.info -optFileName perf.txt
+
+mpiexec -display-map -n 256 -map-by ppr:16:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 256CPU_Cmp_NxNy500Nz200 -platform CPU -Nx 500 -Ny 500 -Nz 200 -cfgFileName solversPetscOptions.info -optFileName perf.txt
+mpiexec -display-map -n 256 -map-by ppr:16:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 256CPU_Cmp_Nx1000Ny500Nz200 -platform CPU -Nx 1000 -Ny 500 -Nz 200 -cfgFileName solversPetscOptions.info -optFileName perf.txt

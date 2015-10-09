@@ -1,0 +1,131 @@
+************************************************************************************************************************
+***             WIDEN YOUR WINDOW TO 120 CHARACTERS.  Use 'enscript -r -fCourier9' to print this document            ***
+************************************************************************************************************************
+
+---------------------------------------------- PETSc Performance Summary: ----------------------------------------------
+
+/home/pychuang/PoissonTest/PetAmgXTest/bin/PetAmgX on a arch-linux2-c-debug named theo with 1 processor, by pychuang Thu Oct  8 20:52:38 2015
+Using Petsc Release Version 3.6.1, unknown 
+
+                         Max       Max/Min        Avg      Total 
+Time (sec):           4.155e+01      1.00000   4.155e+01
+Objects:              2.300e+01      1.00000   2.300e+01
+Flops:                1.638e+07      1.00000   1.638e+07  1.638e+07
+Flops/sec:            3.944e+05      1.00000   3.944e+05  3.944e+05
+Memory:               7.192e+08      1.00000              7.192e+08
+MPI Messages:         0.000e+00      0.00000   0.000e+00  0.000e+00
+MPI Message Lengths:  0.000e+00      0.00000   0.000e+00  0.000e+00
+MPI Reductions:       0.000e+00      0.00000
+
+Flop counting convention: 1 flop = 1 real number operation of type (multiply/divide/add/subtract)
+                            e.g., VecAXPY() for real vectors of length N --> 2N flops
+                            and VecAXPY() for complex vectors of length N --> 8N flops
+
+Summary of Stages:   ----- Time ------  ----- Flops -----  --- Messages ---  -- Message Lengths --  -- Reductions --
+                        Avg     %Total     Avg     %Total   counts   %Total     Avg         %Total   counts   %Total 
+ 0:      Main Stage: 3.7640e+01  90.6%  1.6384e+07 100.0%  0.000e+00   0.0%  0.000e+00        0.0%  0.000e+00   0.0% 
+ 1:         solving: 3.9054e+00   9.4%  0.0000e+00   0.0%  0.000e+00   0.0%  0.000e+00        0.0%  0.000e+00   0.0% 
+
+------------------------------------------------------------------------------------------------------------------------
+See the 'Profiling' chapter of the users' manual for details on interpreting output.
+Phase summary info:
+   Count: number of times phase was executed
+   Time and Flops: Max - maximum over all processors
+                   Ratio - ratio of maximum to minimum over all processors
+   Mess: number of messages sent
+   Avg. len: average message length (bytes)
+   Reduct: number of global reductions
+   Global: entire computation
+   Stage: stages of a computation. Set stages with PetscLogStagePush() and PetscLogStagePop().
+      %T - percent time in this phase         %F - percent flops in this phase
+      %M - percent messages in this phase     %L - percent message lengths in this phase
+      %R - percent reductions in this phase
+   Total Mflop/s: 10e-6 * (sum of flops over all processors)/(max time over all processors)
+------------------------------------------------------------------------------------------------------------------------
+
+
+      ##########################################################
+      #                                                        #
+      #                          WARNING!!!                    #
+      #                                                        #
+      #   This code was compiled with a debugging option,      #
+      #   To get timing results run ./configure                #
+      #   using --with-debugging=no, the performance will      #
+      #   be generally two or three times faster.              #
+      #                                                        #
+      ##########################################################
+
+
+Event                Count      Time (sec)     Flops                             --- Global ---  --- Stage ---   Total
+                   Max Ratio  Max     Ratio   Max  Ratio  Mess   Avg len Reduct  %T %F %M %L %R  %T %F %M %L %R Mflop/s
+------------------------------------------------------------------------------------------------------------------------
+
+--- Event Stage 0: Main Stage
+
+VecNorm                4 1.0 5.3969e-02 1.0 8.19e+06 1.0 0.0e+00 0.0e+00 0.0e+00  0 50  0  0  0   0 50  0  0  0   152
+VecSet                18 1.0 3.4089e-02 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0
+VecAXPY                2 1.0 4.7413e-02 1.0 8.19e+06 1.0 0.0e+00 0.0e+00 0.0e+00  0 50  0  0  0   0 50  0  0  0   173
+VecAssemblyBegin       2 1.0 2.4796e-05 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0
+VecAssemblyEnd         2 1.0 6.9141e-06 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0
+VecScatterBegin        2 1.0 3.2411e-03 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0
+MatAssemblyBegin       4 1.0 4.7684e-06 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0
+MatAssemblyEnd         4 1.0 3.3773e-01 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  1  0  0  0  0   1  0  0  0  0     0
+MatGetRowIJ            2 1.0 3.0994e-06 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0
+
+--- Event Stage 1: solving
+
+------------------------------------------------------------------------------------------------------------------------
+
+Memory usage is given in bytes:
+
+Object Type          Creations   Destructions     Memory  Descendants' Mem.
+Reports information only for process 0.
+
+--- Event Stage 0: Main Stage
+
+              Vector    11              4     65542240     0
+      Vector Scatter     2              1          656     0
+              Matrix     1              0            0     0
+    Distributed Mesh     1              0            0     0
+Star Forest Bipartite Graph     2              0            0     0
+     Discrete System     1              0            0     0
+           Index Set     3              3     16386328     0
+   IS L to G Mapping     1              0            0     0
+              Viewer     1              0            0     0
+
+--- Event Stage 1: solving
+
+========================================================================================================================
+Average time to get PetscTime(): 7.86781e-07
+#PETSc Option Table entries:
+-Nx 160
+-Ny 160
+-Nz 160
+-caseName F_HMIS_LU_0.1
+-cfgFileName F_HMIS_LU_0.1.info
+-optFileName pert.txt
+-platform GPU
+#End of PETSc Option Table entries
+Compiled without FORTRAN kernels
+Compiled with full precision matrices (default)
+sizeof(short) 2 sizeof(int) 4 sizeof(long) 8 sizeof(void*) 8 sizeof(PetscScalar) 8 sizeof(PetscInt) 4
+Configure options: --prefix=/home/pychuang/myPackages/PETSc --with-mpi=1 --with-mpiexec=mpiexec --with-debugging=1 --search-dirs="[/usr/lib/hardening-wrapper/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/opt/cuda/bin:/usr/lib/jvm/default/bin:/opt/mpich/bin:/opt/opencascade/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl]" --package-dirs="[/usr,/opt]" --with-precision=double --with-blas-lapack-dir=/usr --with-valgrind=1 --with-sundials=1 --download-sundials=yes --with-triangle=1 --download-triangle=yes --with-ptscotch=1 --download-ptscotch=yes --with-netcdf-cxx=1 --download-netcdf-cxx=yes --with-hdf5=1 --download-hdf5=yes --with-scalapack=1 --download-scalapack=yes --with-parmetis=1 --download-parmetis=yes --with-metis=1 --download-metis=yes --with-ctetgen=1 --download-ctetgen=yes --download-ctetgen-shared=1
+-----------------------------------------
+Libraries compiled on Thu Sep  3 21:11:56 2015 on theo 
+Machine characteristics: Linux-4.1.6-1-ARCH-x86_64-with-glibc2.2.5
+Using PETSc directory: /home/pychuang/PETSc
+Using PETSc arch: arch-linux2-c-debug
+-----------------------------------------
+
+Using C compiler: mpicc  -fPIC -Wall -Wwrite-strings -Wno-strict-aliasing -Wno-unknown-pragmas -g3 -O0  ${COPTFLAGS} ${CFLAGS}
+Using Fortran compiler: mpif90  -fPIC -Wall -Wno-unused-variable -ffree-line-length-0 -Wno-unused-dummy-argument -g -O0   ${FOPTFLAGS} ${FFLAGS} 
+-----------------------------------------
+
+Using include paths: -I/home/pychuang/PETSc/arch-linux2-c-debug/include -I/home/pychuang/PETSc/include -I/home/pychuang/PETSc/include -I/home/pychuang/PETSc/arch-linux2-c-debug/include -I/home/pychuang/myPackages/PETSc/include
+-----------------------------------------
+
+Using C linker: mpicc
+Using Fortran linker: mpif90
+Using libraries: -Wl,-rpath,/home/pychuang/PETSc/arch-linux2-c-debug/lib -L/home/pychuang/PETSc/arch-linux2-c-debug/lib -lpetsc -Wl,-rpath,/home/pychuang/myPackages/PETSc/lib -L/home/pychuang/myPackages/PETSc/lib -lsundials_cvode -lsundials_nvecserial -lsundials_nvecparallel -lscalapack -Wl,-rpath,/usr -L/usr -llapack -lblas -lparmetis -lmetis -lctetgen -lnetcdf_c++4 -lhdf5hl_fortran -lhdf5_fortran -lhdf5_hl -lhdf5 -lptesmumps -lptscotch -lptscotcherr -lscotch -lscotcherr -ltriangle -lX11 -lhwloc -lssl -lcrypto -lm -Wl,-rpath,/usr/lib/openmpi -L/usr/lib/openmpi -Wl,-rpath,/usr/lib/hardening-wrapper/bin -L/usr/lib/hardening-wrapper/bin -Wl,-rpath,/usr/lib/gcc/x86_64-unknown-linux-gnu/5.2.0 -L/usr/lib/gcc/x86_64-unknown-linux-gnu/5.2.0 -lmpi_usempif08 -lmpi_usempi_ignore_tkr -lmpi_mpifh -lgfortran -lm -lgfortran -lm -lquadmath -lm -lmpi_cxx -lstdc++ -lrt -lm -lz -Wl,-rpath,/usr/lib/openmpi -L/usr/lib/openmpi -Wl,-rpath,/usr/lib/hardening-wrapper/bin -L/usr/lib/hardening-wrapper/bin -Wl,-rpath,/usr/lib/gcc/x86_64-unknown-linux-gnu/5.2.0 -L/usr/lib/gcc/x86_64-unknown-linux-gnu/5.2.0 -ldl -Wl,-rpath,/usr/lib/openmpi -lmpi -lgcc_s -lpthread -ldl 
+-----------------------------------------
+

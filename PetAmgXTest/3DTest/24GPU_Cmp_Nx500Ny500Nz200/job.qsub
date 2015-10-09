@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#SBATCH --job-name="PetAmgX"
+#SBATCH --nodes=12
+#SBATCH --ntasks-per-node=2
+#SBATCH --time=00:10:00
+#SBATCH --output=slurm-job-%j.out
+#SBATCH --error=slurm-job-%j.err
+#SBATCH --partition=ivygpu-noecc
+
+module load openmpi/1.8/gcc/4.7/cuda
+module load cuda/toolkit/6.5
+module load boost
+module load lapack/gcc
+module load blas/gcc
+
+export LM_LICENSE_FILE=/home/pychuang/myPackages/AmgX/amgx_trial-exp-Nov-01-2015.lic
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/pychuang/myPackages/AmgX/lib:/home/pychuang/myPackage/lib
+export PETAMGX_DIR=/home/pychuang/PetAmgXTest
+
+nvidia-smi
+
+mpiexec -display-map -n 24 -map-by ppr:2:node ${PETAMGX_DIR}/bin/PetAmgX -caseName 24GPU_Cmp_NxNy500Nz200 -platform GPU -Nx 500 -Ny 500 -Nz 200 -cfgFileName V_HMIS_LU_0.8.info -optFileName perf.txt
